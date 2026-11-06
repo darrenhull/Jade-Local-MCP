@@ -8,7 +8,7 @@
   "scripts": {
     "build": "node scripts/build.js",
     "release:check": "node scripts/release-check.js",
-    "test": "node --test tests/*/*_tests.test.js build-tools/tests/*/*_tests.test.js",
+    "test": "node scripts/test.js",
     "package:standalone": "node scripts/package-standalone.js",
     "start": "node bin/jade-mcp.js"
   },
