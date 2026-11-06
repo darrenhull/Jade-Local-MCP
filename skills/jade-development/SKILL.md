@@ -62,6 +62,8 @@ Keep catalogue/results paged and filtered for large schemas; do not fetch 30,000
 
 A Jade **Workspace** is signature-free executable scratch code; a **JadeScript** contains named methods on the JadeScript class or its subclasses. Neither means a VS Code project/workspace.
 
+The VS Code presentation is called **Scratch Pad** under Jade's tools. Its primary action is **Run**; optional code sections and notes are UI features, not a new Jade language or a promise of shared variables. Explain it as a place to try Jade code in Working without publishing a class. Check the installed extension/backend capability before claiming it is available.
+
 Use an advertised native Workspace operation when available. Otherwise report it as unavailable; do not route a signature-free script through ordinary class compilation or claim that a plan is implemented. Native `Process.executeScript` with `isWorkspaceMethod=true` supports transient Workspace compilation/execution; direct `jadclient executeScript=<file>` expects a named transient launcher. Void scratch code uses a null return type rather than forcing an `Any` return and an invented return statement.
 
 Keep execution in Working and distinguish compile failure, runtime failure, cancellation and success. Native error codes/positions must be checked even if the hosting process exits zero. Preserve selected-buffer offset mapping and output limits. Do not promise live output flushing, interactive input, shared variables across cells, rollback, GUI support or transient debugging without verifying those features. A notebook can mix Markdown and independently executable code cells while honestly stating variable and persistent-data lifetimes.

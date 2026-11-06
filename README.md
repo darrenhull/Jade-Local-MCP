@@ -62,6 +62,8 @@ The versioned [Jade development skill](skills/jade-development/SKILL.md) is incl
 
 The skill covers Source versus Working, native build/test and inspection, saved files versus scratch snapshots, schema-qualified identity, formatting/Error Lens, recovery 3094, collection/designer limits, Workspace/JadeScript semantics and the native CLI architecture. It requires agents to consult installed capabilities rather than treating a plan as an implemented feature. Source recovery is distinct from compilation and publication and must not be performed silently.
 
+Jade is a trademark of Jade Software Corporation Limited. This is independent third-party tooling; the project does not claim official endorsement. Native Jade terminology identifies the compatible platform and its features.
+
 For local Codex discovery, copy the `skills/jade-development` folder into your Codex skills directory (normally `~/.codex/skills/`). Other clients can install the same SKILL.md using their supported skill location or retrieve it through MCP. Server instructions guide the model; they do not grant permissions or guarantee that every host automatically loads resources. No secrets or machine-specific connection settings are included.
 
 Publication, extraction, source authoring, DAP debugging, arbitrary native utilities and object editing are not exposed by this server. Those require additional typed SDK interfaces and, for publication, a user-reviewed plan; an arbitrary model-supplied approval flag is not a substitute. The VS Code extension retains its existing publishing and debugger interfaces.
