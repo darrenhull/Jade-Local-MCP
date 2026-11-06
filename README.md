@@ -4,7 +4,7 @@ Local MCP server over the native C++ Jade CLI, using the official MCP TypeScript
 
 ## Run the portable server
 
-Download and extract the complete `jade-mcp-win-x64.zip` release. Keep its `bin`, `src`, `native` and `node_modules` sidecars next to `jade-mcp.exe`. The MCP protocol adapter still uses the official JavaScript SDK and embeds Node in `jade-mcp.exe`; end users do not need a separate Node installation or VS Code. The separate `native/jade-cli.exe` is C++ and has no Node runtime. No JavaScript CLI/broker is used or included in the runtime bundle.
+Download and extract the complete `jade-mcp-win-x64.zip` release. Keep its `bin`, `src`, `skills`, `native` and `node_modules` sidecars next to `jade-mcp.exe`. The MCP protocol adapter still uses the official JavaScript SDK and embeds Node in `jade-mcp.exe`; end users do not need a separate Node installation or VS Code. The separate `native/jade-cli.exe` is C++ and has no Node runtime. No JavaScript CLI/broker is used or included in the runtime bundle.
 
 ```powershell
 C:\Tools\jade-mcp\jade-mcp.exe --workspace C:\repos\MyJadeProject
@@ -32,6 +32,7 @@ VS Code and other Copilot clients have different configuration file formats. See
 
 | Tool | Purpose |
 |---|---|
+| `jade_get_guidance` | Read the bundled Jade development skill without opening a database. |
 | `jade_doctor` | Check native tool availability and resolved configuration. |
 | `jade_build` | Compile selected CLS files or incrementally build the configured project when files are omitted. |
 | `jade_test` | Run selected test files and optional method names in the warm native Working session. |
@@ -54,6 +55,16 @@ Database catalogue filtering and paging happen in the native helper before its r
 Build/test reuse the native CLI broker and its Jade session. C++ owns configuration discovery, dependency selection, successful-input change tracking and native operations. The MCP adapter only validates tool inputs and exchanges JSONL requests with `jade-cli.exe service --stdio`. Results preserve real Jade codes, source diagnostics and individual test failures. A failed build or test is an MCP tool error with a structured result. Cancellation covers owned requests waiting for startup as well as running operations.
 
 Resources `jade://capabilities` and `jade://workspace` describe the actual implemented surface and non-secret resolved workspace identity. Prompt `jade_check_changes` guides a compile/test workflow.
+
+## Agent skill and instructions
+
+The versioned [Jade development skill](skills/jade-development/SKILL.md) is included in every portable distribution. MCP initialization instructions direct agents to read it using `jade_get_guidance` or `jade://skills/jade-development`; the tool supports clients that do not present resources. Both return the same packaged file, without opening a database or starting native work.
+
+The skill covers Source versus Working, native build/test and inspection, saved files versus scratch snapshots, schema-qualified identity, formatting/Error Lens, recovery 3094, collection/designer limits, Workspace/JadeScript semantics and the native CLI architecture. It requires agents to consult installed capabilities rather than treating a plan as an implemented feature. Source recovery is distinct from compilation and publication and must not be performed silently.
+
+Jade is a trademark of Jade Software Corporation Limited. This is independent third-party tooling; the project does not claim official endorsement. Native Jade terminology identifies the compatible platform and its features.
+
+For local Codex discovery, copy the `skills/jade-development` folder into your Codex skills directory (normally `~/.codex/skills/`). Other clients can install the same SKILL.md using their supported skill location or retrieve it through MCP. Server instructions guide the model; they do not grant permissions or guarantee that every host automatically loads resources. No secrets or machine-specific connection settings are included.
 
 Publication, extraction, source authoring, DAP debugging, arbitrary native utilities and object editing are not exposed by this server. Those require additional typed SDK interfaces and, for publication, a user-reviewed plan; an arbitrary model-supplied approval flag is not a substitute. The VS Code extension retains its existing publishing and debugger interfaces.
 
