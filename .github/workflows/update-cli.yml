@@ -18,8 +18,8 @@ permissions:
 
 jobs:
   update:
-    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/update-consumer.yml@892839dc2175a4a735ddf0be2356e7757616c9fd
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/update-consumer.yml@0798d998829a879bb980fb47e03ac2f40524fdf0
     with:
-      consumer_automation_ref: 892839dc2175a4a735ddf0be2356e7757616c9fd
+      consumer_automation_ref: 0798d998829a879bb980fb47e03ac2f40524fdf0
       cli_tag: ${{ inputs.cli_tag || github.event.client_payload.cli_tag || '' }}
       update_script: scripts/update-cli.js

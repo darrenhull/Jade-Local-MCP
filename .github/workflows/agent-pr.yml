@@ -17,4 +17,4 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/open-agent-pr.yml@892839dc2175a4a735ddf0be2356e7757616c9fd
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/open-agent-pr.yml@0798d998829a879bb980fb47e03ac2f40524fdf0

@@ -16,3 +16,13 @@ test('MCP agent pushes reuse only the pinned consumer bot PR workflow without di
  assert.match(workflow,/uses: darrenhull\/Jade-VSCode-Extension\/\.github\/workflows\/open-agent-pr\.yml@[a-f0-9]{40}/);
  assert.doesNotMatch(workflow,/npm |setup-node@|actions: write|gh workflow run|workflow_dispatch/);
 });
+
+test('all shared workflows and automation checkouts pin the reviewed reachable extension main commit',()=>{
+ const reviewed='0798d998829a879bb980fb47e03ac2f40524fdf0';
+ for(const name of ['build.yml','agent-pr.yml','update-cli.yml']){
+  const workflow=read(name),uses=[...workflow.matchAll(/uses: darrenhull\/Jade-VSCode-Extension\/\.github\/workflows\/[^@\s]+@([^\s]+)/g)];
+  assert.ok(uses.length>0,name+' must retain pinned shared automation');
+  for(const match of uses)assert.equal(match[1],reviewed,name+' must not depend on a deleted feature-branch commit');
+  for(const match of workflow.matchAll(/consumer_automation_ref: ([^\s]+)/g))assert.equal(match[1],reviewed,name+' checkout must match its called workflow');
+ }
+});
