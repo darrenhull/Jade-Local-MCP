@@ -1,8 +1,15 @@
 node_modules/
+.jade-automation/
+/native/
 dist/
+build/
+*.exe
+!packages/jade-cli-win-x64/*.exe
+!packages/jade-cli-win-x64/native/*.exe
 coverage/
 *.log
 *.tgz
+!packages/jade-tools-cli-*.tgz
 .env
 .env.*
 !.env.example
@@ -18,3 +25,9 @@ Thumbs.db
 /evidence/
 /archives/
 /planning/
+
+# Requested editable architecture documentation; keep other research notes ignored.
+!docs/
+docs/*
+!docs/architecture.drawio
+!docs/architecture.drawio.svg

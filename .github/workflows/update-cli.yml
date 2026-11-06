@@ -1,0 +1,25 @@
+name: Update pinned Jade CLI
+
+on:
+  schedule:
+    - cron: '37 * * * *'
+  workflow_dispatch:
+    inputs:
+      cli_tag:
+        description: CLI release tag (blank selects latest stable release)
+        type: string
+        required: false
+  repository_dispatch:
+    types: [jade-cli-released]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/update-consumer.yml@2235e85596741d4b590818512b9ec7d74721faed
+    with:
+      consumer_automation_ref: 2235e85596741d4b590818512b9ec7d74721faed
+      cli_tag: ${{ inputs.cli_tag || github.event.client_payload.cli_tag || '' }}
+      update_script: scripts/update-cli.js

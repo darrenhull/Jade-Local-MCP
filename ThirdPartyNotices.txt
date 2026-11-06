@@ -1,0 +1,12 @@
+Jade MCP uses the official @modelcontextprotocol/server and core packages
+(Apache-2.0), Zod (MIT), and the Jade CLI runtime and owned native helpers.
+Their package LICENSE files and notices are retained in the standalone bundle.
+
+The Windows executable embeds Node.js v24.22.1. Its full license notice and
+third-party licenses are included as NODE-LICENSE.txt in the distribution.
+
+The C++ CLI keeps its native runtime and vendored dependency notices under
+native/. It does not embed Node. Jade vendor DLLs are not distributed here.
+
+postject is a build-only dependency under the MIT license and is not required
+in the runtime distribution.

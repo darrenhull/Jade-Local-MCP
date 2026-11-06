@@ -1,0 +1,76 @@
+name: MCP build and release
+
+on:
+  push:
+    branches: ['main']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  release-guard:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/release-ancestry.yml@cc1a7536076c7a870dcac523b96cd46e5a7a72fc
+
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.1'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node scripts/update-cli.js --verify-lock
+      - run: npm test
+      - run: npm run build
+      - name: Check a release tag before packaging
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: npm run release:check
+      - run: npm run package:standalone
+      - name: Exercise the actual EXE with no Node on its PATH
+        run: |
+          $runtime = Join-Path $env:RUNNER_TEMP 'jade-mcp-standalone-proof'
+          Expand-Archive -LiteralPath dist/jade-mcp-win-x64.zip -DestinationPath $runtime
+          $env:JADE_MCP_STANDALONE_EXE = Join-Path $runtime 'jade-mcp.exe'
+          npm test
+      - name: Validate the built distribution and produce checksums
+        run: |
+          $env:RELEASE_TAG = 'v' + (Get-Content package.json -Raw | ConvertFrom-Json).version
+          npm run release:check -- --artifacts
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: jade-mcp-windows-x64
+          path: |
+            dist/jade-mcp-win-x64.zip
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+  release:
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    needs: [build, release-guard]
+    permissions:
+      contents: write
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/publish-consumer.yml@cc1a7536076c7a870dcac523b96cd46e5a7a72fc
+    with:
+      artifact_name: jade-mcp-windows-x64
+      consumer_automation_ref: cc1a7536076c7a870dcac523b96cd46e5a7a72fc
+      archive_name: jade-mcp-win-x64.zip
+      executable_name: jade-mcp.exe
