@@ -15,6 +15,6 @@ jobs:
   open-agent-pr:
     if: github.actor == 'darrenhull' && github.repository_owner == 'darrenhull'
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
-    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/open-agent-pr.yml@c985ad94713986ec3040a57a85b60fd0f2e7e383
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/open-agent-pr.yml@cc1a7536076c7a870dcac523b96cd46e5a7a72fc

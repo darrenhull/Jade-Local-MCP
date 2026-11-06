@@ -12,12 +12,12 @@ permissions:
 
 concurrency:
   group: mcp-build-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   release-guard:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/release-ancestry.yml@0b5ad923a8e56ced5f0332345821683c0918310b
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/release-ancestry.yml@cc1a7536076c7a870dcac523b96cd46e5a7a72fc
 
   build:
     runs-on: windows-2022
@@ -64,24 +64,13 @@ jobs:
           compression-level: 0
 
   release:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     needs: [build, release-guard]
-    runs-on: ubuntu-latest
     permissions:
       contents: write
-    steps:
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: jade-mcp-windows-x64
-          path: release
-      - name: Publish verified Windows release
-        working-directory: release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          # The EXE is already inside the ZIP; avoid uploading it twice in CI.
-          unzip -p jade-mcp-win-x64.zip jade-mcp.exe > jade-mcp.exe
-          sha256sum --check SHA256SUMS
-          gh release create "$RELEASE_TAG" jade-mcp-win-x64.zip jade-mcp.exe SHA256SUMS --verify-tag --generate-notes --title "Jade MCP $RELEASE_TAG"
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/publish-consumer.yml@cc1a7536076c7a870dcac523b96cd46e5a7a72fc
+    with:
+      artifact_name: jade-mcp-windows-x64
+      consumer_automation_ref: cc1a7536076c7a870dcac523b96cd46e5a7a72fc
+      archive_name: jade-mcp-win-x64.zip
+      executable_name: jade-mcp.exe
