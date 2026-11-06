@@ -2,7 +2,7 @@ name: MCP build and release
 
 on:
   push:
-    branches: ['**']
+    branches: ['main']
     tags: ['v*']
   pull_request:
   workflow_dispatch:
@@ -62,16 +62,6 @@ jobs:
           if-no-files-found: error
           retention-days: 1
           compression-level: 0
-
-  open-agent-pr:
-    if: github.event_name == 'push' && github.actor == 'darrenhull' && github.repository_owner == 'darrenhull' && startsWith(github.ref, 'refs/heads/codex/agent/')
-    needs: build
-    permissions:
-      contents: read
-      pull-requests: write
-    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/open-agent-pr.yml@0b5ad923a8e56ced5f0332345821683c0918310b
-    with:
-      source_pr: ${{ github.ref == 'refs/heads/codex/agent/mcp-server-and-releases' && 1 || 0 }}
 
   release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
