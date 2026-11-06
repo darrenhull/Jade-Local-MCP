@@ -32,8 +32,8 @@ export class NativeDistribution {
   stage(destination){
     const target=path.resolve(destination);
     if(this.source===target||this.source.startsWith(target+path.sep)||target.startsWith(this.source+path.sep))throw Error('Native source and destination must be separate.');
-    const {manifest,files}=this.verify();fs.rmSync(target,{recursive:true,force:true});fs.mkdirSync(target,{recursive:true});
+    const {files}=this.verify();fs.rmSync(target,{recursive:true,force:true});fs.mkdirSync(target,{recursive:true});
     for(const [relative,bytes]of files){const file=path.join(target,relative);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,bytes);}
-    fs.writeFileSync(path.join(target,'distribution.json'),JSON.stringify(manifest,null,2)+'\n');return target;
+    fs.copyFileSync(path.join(this.source,'distribution.json'),path.join(target,'distribution.json'));return target;
   }
 }

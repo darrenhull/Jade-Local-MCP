@@ -18,6 +18,7 @@ export class ReleaseValidator {
   }
   verifyArtifacts(){
     const manifest=this.validate(),directory=path.join(this.root,'dist/jade-mcp-win-x64'),distribution=JSON.parse(fs.readFileSync(path.join(directory,'distribution.json'),'utf8'));
+    new NativeDistribution(path.join(directory,'native')).verifyPin(path.join(this.root,'packages/jade-cli-pin.json'));
     const sha=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
     if(distribution.packageVersion!==manifest.version||distribution.executable!=='jade-mcp.exe')throw Error('MCP distribution identity does not match the release.');
     if(sha(path.join(directory,'jade-mcp.exe'))!==distribution.executableSha256)throw Error('MCP executable checksum mismatch.');

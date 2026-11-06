@@ -8,3 +8,11 @@ import {NativeDistribution} from '../../src/NativeDistribution.js';
 function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'mcp-native-dist-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const source=path.join(root,'source'),target=path.join(root,'target');fs.mkdirSync(path.join(source,'native'),{recursive:true});fs.writeFileSync(path.join(source,'jade-cli.exe'),'native-cli');fs.writeFileSync(path.join(source,'native/helper.exe'),'helper');const hash=name=>crypto.createHash('sha256').update(fs.readFileSync(path.join(source,name))).digest('hex');const manifest={formatVersion:2,runtime:'native-cpp',platform:'win32',arch:'x64',executable:'jade-cli.exe',executableSha256:hash('jade-cli.exe'),runtimeFiles:{'native/helper.exe':hash('native/helper.exe')}};fs.writeFileSync(path.join(source,'distribution.json'),JSON.stringify(manifest));return {source,target,manifest};}
 test('stages only native manifest files and rejects embedded Node distributions',t=>{const f=fixture(t);fs.writeFileSync(path.join(f.source,'node.exe'),'omit');new NativeDistribution(f.source).stage(f.target);assert.equal(fs.existsSync(path.join(f.target,'node.exe')),false);assert.equal(fs.readFileSync(path.join(f.target,'native/helper.exe'),'utf8'),'helper');f.manifest.runtime='node-sea';fs.writeFileSync(path.join(f.source,'distribution.json'),JSON.stringify(f.manifest));assert.throws(()=>new NativeDistribution(f.source).verify(),/native/i);});
 test('does not replace the previous payload when verification fails',t=>{const f=fixture(t);fs.mkdirSync(f.target);fs.writeFileSync(path.join(f.target,'keep'),'old');fs.writeFileSync(path.join(f.source,'jade-cli.exe'),'tampered');assert.throws(()=>new NativeDistribution(f.source).stage(f.target),/checksum/i);assert.equal(fs.readFileSync(path.join(f.target,'keep'),'utf8'),'old');});
+
+test('staging preserves official manifest bytes including whitespace and CRLF',t=>{
+ const f=fixture(t),file=path.join(f.source,'distribution.json');
+ const original=Buffer.from(JSON.stringify(f.manifest,null,4).replaceAll('\n','\r\n')+'\r\n');
+ fs.writeFileSync(file,original);
+ new NativeDistribution(f.source).stage(f.target);
+ assert.deepEqual(fs.readFileSync(path.join(f.target,'distribution.json')),original);
+});
