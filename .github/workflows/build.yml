@@ -1,0 +1,87 @@
+name: MCP build and release
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-build-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  release-guard:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    uses: darrenhull/Jade-CLI/.github/workflows/release-ancestry.yml@fd723456490a67d04ce6f5cc27496b03601d7e74
+
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24.22.1'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node scripts/update-cli.js --verify-lock
+      - run: npm test
+      - run: npm run build
+      - name: Check a release tag before packaging
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: npm run release:check
+      - run: npm run package:standalone
+      - name: Exercise the actual EXE with no Node on its PATH
+        run: |
+          $runtime = Join-Path $env:RUNNER_TEMP 'jade-mcp-standalone-proof'
+          Expand-Archive -LiteralPath dist/jade-mcp-win-x64.zip -DestinationPath $runtime
+          $env:JADE_MCP_STANDALONE_EXE = Join-Path $runtime 'jade-mcp.exe'
+          npm test
+      - name: Validate the built distribution and produce checksums
+        run: |
+          $env:RELEASE_TAG = 'v' + (Get-Content package.json -Raw | ConvertFrom-Json).version
+          npm run release:check -- --artifacts
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: jade-mcp-windows-x64
+          path: |
+            dist/jade-mcp-win-x64.zip
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs: [build, release-guard]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: jade-mcp-windows-x64
+          path: release
+      - name: Publish verified Windows release
+        working-directory: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          # The EXE is already inside the ZIP; avoid uploading it twice in CI.
+          unzip -p jade-mcp-win-x64.zip jade-mcp.exe > jade-mcp.exe
+          sha256sum --check SHA256SUMS
+          gh release create "$RELEASE_TAG" jade-mcp-win-x64.zip jade-mcp.exe SHA256SUMS --verify-tag --generate-notes --title "Jade MCP $RELEASE_TAG"

@@ -1,0 +1,23 @@
+import * as z from 'zod/v4';
+const text=z.string().min(1),files=z.array(text).max(1000).optional(),page={limit:z.number().int().min(1).max(100).default(50),offset:z.number().int().min(0).default(0)},query={query:z.string().max(500).optional(),...page};
+const inspection={target:z.enum(['working','source']).default('working'),sessionId:text.max(100).default('default')};
+const oid=z.string().regex(/^[a-fA-F0-9]{44}$/).describe('Native OID from this target/session catalogue or object response; never reuse an OID from another database.');
+export const capabilities={supported:['doctor','build','test','tests.list','source.search','status','disconnect','shutdown','inspect.catalog','inspect.instances','inspect.object','inspect.collection','inspect.release','inspect.close','jobs','cancel'],unsupported:['publish','pull','authoring','debug','arbitrary native execution','object editing'],source:'Saved workspace files; native Jade runs in the isolated Working database. Source inspection is read-only.'};
+export function tools(){return [
+  {name:'jade_doctor',command:'doctor',description:'Check resolved Jade installation and native tool availability. Does not open a database.',shape:{}},
+  {name:'jade_build',command:'build',description:'Compile saved Jade files in the isolated Working database. Omit files for incremental whole-project build; uses nearest jade.json. Never publishes to Source.',shape:{files},write:true},
+  {name:'jade_test',command:'test',description:'Compile and execute native Jade tests from selected CLS files, preserving individual failures and real compiler codes. Uses shared warm Working session; never publishes.',shape:{files:z.array(text).min(1).max(1000),methods:z.array(text).max(1000).optional()},write:true,repeatable:false},
+  {name:'jade_list_tests',command:'tests.list',description:'List schema-qualified unit tests from saved workspace files, with text filtering and pages. No database connection.',shape:query},
+  {name:'jade_search_source',command:'source.search',description:'Search schema-qualified workspace classes from saved files, with bounded pages. No database connection.',shape:query},
+  {name:'jade_status',command:'status',description:'Read shared broker PID, active jobs and owned native process status.',shape:{}},
+  {name:'jade_list_jobs',command:'jobs',description:'List active requests owned by this MCP client. Use their IDs with jade_cancel.',shape:{}},
+  {name:'jade_cancel',command:'cancel',description:'Cancel one active operation owned by this MCP client; never cancels another client’s work.',shape:{operationId:text},write:true},
+  {name:'jade_disconnect',command:'disconnect',description:'Explicitly release idle native build/test and inspection sessions in the shared broker. Other clients may reconnect.',shape:{},write:true},
+  {name:'jade_shutdown',command:'shutdown',description:'Stop the shared Jade broker and its owned native processes. Affects this user’s other connected Jade tools; use only when explicitly requested.',shape:{},write:true,destructive:true},
+  {name:'jade_inspect_catalog',command:'inspect.catalog',description:'Read and search a database class catalogue. Returns bounded schema-qualified class rows and OIDs. Defaults to Working; Source is read-only.',shape:{...inspection,...query,schema:text.optional(),includeSystem:z.boolean().default(false)}},
+  {name:'jade_inspect_instances',command:'inspect.instances',description:'Read one page of persistent object identities for a class OID from the selected target/session. Keep cursor and target together.',shape:{...inspection,classOid:oid,limit:page.limit,cursor:text.optional(),includeSubclasses:z.boolean().default(false)}},
+  {name:'jade_inspect_object',command:'inspect.object',description:'Read native object properties by OID from the same target/session. Does not evaluate arbitrary expressions or modify data.',shape:{...inspection,oid}},
+  {name:'jade_inspect_collection',command:'inspect.collection',description:'Read a bounded page of native collection members and dictionary keys. Cursor is valid only for its target/session.',shape:{...inspection,oid,limit:page.limit,cursor:text.optional()}},
+  {name:'jade_release_cursor',command:'inspect.release',description:'Release one native inspection cursor in its original target/session.',shape:{...inspection,cursor:text}},
+  {name:'jade_close_inspection',command:'inspect.close',description:'Close an inspection session before switching its database identity.',shape:inspection}
+].map(tool=>({...tool,inputSchema:z.object(tool.shape).strict()}));}

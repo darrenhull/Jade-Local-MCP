@@ -1,7 +1,45 @@
 {
-  "name": "@jade-local-tools/mcp-server",
-  "version": "0.0.0",
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "postject": "1.0.0-alpha.6"
+  },
   "private": true,
-  "description": "Planning scaffold for a local MCP adapter over the future published Jade SDK. No server is implemented.",
-  "license": "UNLICENSED"
+  "scripts": {
+    "build": "node scripts/build.js",
+    "release:check": "node scripts/release-check.js",
+    "test": "node --test tests/*/*_tests.test.js",
+    "package:standalone": "node scripts/package-standalone.js",
+    "start": "node bin/jade-mcp.js"
+  },
+  "name": "@jade-local-tools/mcp-server",
+  "license": "UNLICENSED",
+  "description": "Local MCP server over the native Jade CLI shared SDK.",
+  "type": "module",
+  "files": [
+    "jade-mcp.exe",
+    "bin",
+    "src",
+    "package.json",
+    "README.md",
+    "licenses",
+    "packages",
+    "ThirdPartyNotices.txt",
+    "docs/architecture.drawio",
+    "docs/architecture.drawio.svg"
+  ],
+  "bin": {
+    "jade-mcp": "bin/jade-mcp.js"
+  },
+  "dependencies": {
+    "zod": "4.6.7",
+    "jade-tools-cli": "file:packages/jade-tools-cli-0.1.1.tgz",
+    "@modelcontextprotocol/server": "2.4.0"
+  },
+  "engines": {
+    "node": ">=24.22.1"
+  },
+  "version": "0.1.0",
+  "jadeMcp": {
+    "serverImplemented": true
+  }
 }

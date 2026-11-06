@@ -1,8 +1,11 @@
 node_modules/
 dist/
+build/
+*.exe
 coverage/
 *.log
 *.tgz
+!packages/jade-tools-cli-*.tgz
 .env
 .env.*
 !.env.example
@@ -18,3 +21,9 @@ Thumbs.db
 /evidence/
 /archives/
 /planning/
+
+# Requested editable architecture documentation; keep other research notes ignored.
+!docs/
+docs/*
+!docs/architecture.drawio
+!docs/architecture.drawio.svg

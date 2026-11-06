@@ -1,0 +1,32 @@
+name: Update pinned Jade CLI
+
+on:
+  schedule:
+    - cron: '37 * * * *'
+  workflow_dispatch:
+    inputs:
+      cli_tag:
+        description: CLI release tag (blank selects latest stable release)
+        type: string
+        required: false
+  repository_dispatch:
+    types: [jade-cli-released]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  update:
+    uses: darrenhull/Jade-CLI/.github/workflows/update-consumer.yml@fd723456490a67d04ce6f5cc27496b03601d7e74
+    with:
+      cli_tag: ${{ inputs.cli_tag || github.event.client_payload.cli_tag || '' }}
+      update_script: scripts/update-cli.js
+      package_script: package:standalone
+      release_script: scripts/release-check.js
+      release_args_json: '["--artifacts"]'
+      ci_workflow: build.yml
+      standalone_executable: dist/jade-mcp-win-x64/jade-mcp.exe
+      standalone_archive: dist/jade-mcp-win-x64.zip
+      standalone_env: JADE_MCP_STANDALONE_EXE
