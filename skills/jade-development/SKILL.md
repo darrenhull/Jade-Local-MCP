@@ -20,6 +20,8 @@ Use the installed Jade runtime as the authority for compilation, object semantic
 
 Build/test never publish local source to Source. Application/test/scratch code can modify Working data; a successful persistent transaction can survive the next run. Do not imply an automatic rollback or that Working data always equals Source. Reset/recreate Working can discard its data and should follow the user's requested scope.
 
+Working is a database target, not an operating-system or security sandbox. Executed Jade code can access files, networks and external components permitted by the runtime. Do not describe database isolation as preventing all external side effects, and preserve the user's execution scope.
+
 Workspace native files are the application source of truth. System metadata/cache and private databases belong outside that source tree. Preserve native CLS/SCM/SEC/DDX/JCF syntax, encoding and meaningful metadata; do not manufacture class numbers, patch versions or broad conversion rules. Schema headers are siblings of their schema folders in the extracted layout. Class/session/global/application files do not replace every schema-level declaration.
 
 MCP/CLI read saved files on disk. VS Code build/test commands save their inputs. A scratch command that explicitly accepts a buffer snapshot is different: keep the exact snapshot and selection offsets for diagnostics. Do not silently claim unsaved editor changes were built from disk.
