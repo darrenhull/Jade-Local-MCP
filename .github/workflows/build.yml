@@ -3,7 +3,6 @@ name: MCP build and release
 on:
   push:
     branches: ['main']
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
@@ -16,8 +15,8 @@ concurrency:
 
 jobs:
   release-guard:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/release-ancestry.yml@cc1a7536076c7a870dcac523b96cd46e5a7a72fc
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/release-ancestry.yml@892839dc2175a4a735ddf0be2356e7757616c9fd
 
   build:
     runs-on: windows-2022
@@ -37,11 +36,6 @@ jobs:
       - run: node scripts/update-cli.js --verify-lock
       - run: npm test
       - run: npm run build
-      - name: Check a release tag before packaging
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: npm run release:check
       - run: npm run package:standalone
       - name: Exercise the actual EXE with no Node on its PATH
         run: |
@@ -64,13 +58,13 @@ jobs:
           compression-level: 0
 
   release:
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [build, release-guard]
     permissions:
       contents: write
-    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/publish-consumer.yml@cc1a7536076c7a870dcac523b96cd46e5a7a72fc
+    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/publish-consumer.yml@892839dc2175a4a735ddf0be2356e7757616c9fd
     with:
       artifact_name: jade-mcp-windows-x64
-      consumer_automation_ref: cc1a7536076c7a870dcac523b96cd46e5a7a72fc
+      consumer_automation_ref: 892839dc2175a4a735ddf0be2356e7757616c9fd
       archive_name: jade-mcp-win-x64.zip
       executable_name: jade-mcp.exe
