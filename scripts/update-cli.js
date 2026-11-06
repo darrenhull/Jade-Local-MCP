@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {NativeDistribution} from '../src/NativeDistribution.js';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 try{
-  if(process.argv[2]==='--verify-lock'){new NativeDistribution(process.env.JADE_CLI_DISTRIBUTION||path.join(root,'packages/jade-cli-win-x64')).verify();console.log('Native CLI distribution integrity verified.');}
+  if(process.argv[2]==='--verify-lock'){new NativeDistribution(process.env.JADE_CLI_DISTRIBUTION||path.join(root,'packages/jade-cli-win-x64')).verifyPin(path.join(root,'packages/jade-cli-pin.json'));console.log('Native CLI release pin and distribution integrity verified.');}
   else {
     const script=process.env.JADE_NATIVE_UPDATER_SCRIPT;
     if(!script||!path.isAbsolute(script)||!fs.existsSync(script))throw Error('Set JADE_NATIVE_UPDATER_SCRIPT to the explicitly pinned shared native ZIP updater. Legacy JavaScript CLI updates are disabled.');

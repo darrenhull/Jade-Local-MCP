@@ -1,11 +1,9 @@
-# Pinned Jade CLI candidate
+# Pinned native Jade CLI
 
-`jade-tools-cli-0.1.1.tgz` is the exact reviewed CLI/SDK dependency used to build MCP 0.1.0. It is committed so this repository builds independently of the CLI checkout.
+`jade-cli-win-x64/` contains the native C++ Jade CLI and its owned native helpers from the official `darrenhull/Jade-CLI` release. It builds independently of a sibling checkout and contains no Node CLI, JavaScript SDK, private database or vendor Jade DLLs.
 
-SHA-256: `AC20474CB885E19AC5752987CFA97616F8EB3AAB84A4D144A0CCB2271474409C`.
+`jade-cli-pin.json` records the release version, tag, verified downloaded ZIP SHA-256 and the SHA-256 of the exact extracted `distribution.json` bytes. The shared updater verifies the ZIP checksum before recording this receipt. The manifest then binds every executable, helper and runtime file to that verified payload.
 
-This initial candidate was built from the CLI feature branch before its pull request was merged. It is not claimed to be an already-published GitHub release. After the CLI changes are reviewed, merged and released, run the linked updater to pin the official release package before publishing MCP releases.
+`node scripts/update-cli.js --verify-lock` validates the pin identity, receipt manifest digest and all runtime file hashes, including required helpers. The ZIP digest is an installation receipt: it cannot be reconstructed from extracted files and is not independently re-proven by this command. Changing both the receipt and payload requires code review.
 
-The archive contains the portable CLI, shared SDK, owned C++ helpers, native source and license notices. Jade vendor DLLs, private configuration and databases are excluded. The MCP runtime reuses the SDK and its broker, while keeping only one embedded Node runtime in the portable distribution.
-
-`package-lock.json` pins this archive's SHA-512 integrity. Keep the archive and lockfile together; never edit installed/generated vendor files to upgrade the SDK.
+Upgrade through the extension-owned pinned updater using `JADE_NATIVE_UPDATER_SCRIPT`. Commit the payload and pin together; do not edit generated `native/` files. The MCP server uses the official JavaScript MCP SDK; its portable executable embeds its own Node runtime. The Jade CLI itself is native C++.

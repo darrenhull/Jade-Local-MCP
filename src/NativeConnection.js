@@ -18,6 +18,7 @@ export class NativeConnection {
     const child=this.child=this.spawn(this.entry,['service','--stdio'],{env,windowsHide:true,shell:false,stdio:['pipe','pipe','pipe']});
     child.once('error',error=>this.fail(Error('The native Jade CLI could not start: '+error.message)));
     child.stdin.on('error',error=>this.fail(Error('The native Jade CLI input failed: '+error.message)));
+    for(const name of ['stdout','stderr'])child[name].on('error',error=>this.fail(Error('The native Jade CLI '+name+' failed: '+error.message)));
     child.stderr.on('data',data=>this.stderr=(this.stderr+data.toString('utf8')).slice(-8192));
     child.once('close',code=>{if(!this.closed)this.fail(Error('The native Jade CLI closed (exit '+code+'). '+this.stderr));});
     child.stdout.on('data',bytes=>{

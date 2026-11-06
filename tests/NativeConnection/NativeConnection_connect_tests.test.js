@@ -40,3 +40,9 @@ test('oversized unterminated native frames close the service before unbounded bu
  connection.socket.on('error',error=>failure=error);connection.send({id:'x',command:'status'});
  process.stdout.write(Buffer.alloc(8*1024*1024+1,65));assert.match(failure.message,/limit/i);assert.equal(connection.closed,true);
 });
+for(const stream of ['stdout','stderr'])test('native '+stream+' stream errors close safely without an unhandled exception',()=>{
+ const process=child(),connection=new NativeConnection({entry:'jade-cli.exe',spawn:()=>process});let failure,closed=0;
+ connection.socket.on('error',error=>failure=error);connection.socket.on('close',()=>closed++);connection.send({id:'x',command:'status'});
+ assert.doesNotThrow(()=>process[stream].emit('error',Error('pipe failure')));assert.match(failure.message,new RegExp(stream+'.*pipe failure'));assert.equal(connection.closed,true);assert.equal(closed,1);
+ assert.doesNotThrow(()=>process[stream].emit('error',Error('late pipe failure')));assert.equal(closed,1);
+});
