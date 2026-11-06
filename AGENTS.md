@@ -58,6 +58,8 @@ This repository owns the local MCP adapter, tool schemas, resources/prompts, cli
 ## Builds, releases and maintenance
 
 - Target new pull requests at main. Preserve required code-owner approval; do not bypass it or push product changes directly to the protected default branch.
+- Create and retain draft pull requests while implementation, dependency updates, validation or review fixes remain. Do not request human owner review or queue auto-merge while a PR is a draft.
+- Mark ready and request owner review only after the work and required checks are complete. After readiness, protected squash auto-merge may be queued; never approve the PR on the owner's behalf.
 
 - Independent checkouts must build from committed inputs and lockfiles. packages/jade-cli-win-x64 is the pinned native runtime; verify format, identity and every manifest hash before staging. The local build-tools package supplies only MCP development packaging utilities and must not enter runtime output. Do not restore the legacy CLI SDK dependency or a duplicate archive of local build-tools source.
 - Exclude credentials, user configuration, databases, caches, logs and research notes from Git. Track requested diagrams and build-required source, tests and notices.

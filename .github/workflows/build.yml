@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   release-guard:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/release-ancestry.yml
 
   build:
@@ -58,7 +58,7 @@ jobs:
           compression-level: 0
 
   release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     needs: [build, release-guard]
     permissions:
       contents: write

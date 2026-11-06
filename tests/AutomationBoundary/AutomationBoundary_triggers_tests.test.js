@@ -7,7 +7,7 @@ test('full MCP builds run for PRs, main pushes and manual requests without dupli
  const workflow=read('build.yml');
  assert.match(workflow,/branches: \['main'\]/);
  assert.match(workflow,/pull_request:/);assert.match(workflow,/workflow_dispatch:/);assert.doesNotMatch(workflow,/tags:|refs\/tags/);
- assert.equal((workflow.match(/if: github.event_name == 'push' && github.ref == 'refs\/heads\/main'/g)||[]).length,2);
+ assert.equal((workflow.match(/if: .*github.ref == 'refs\/heads\/main'/g)||[]).length,2);
  assert.doesNotMatch(workflow,/\n  open-agent-pr:/);assert.match(workflow,/\n  build:/);
 });
 test('MCP agent pushes use only the local bot PR workflow without dispatching duplicate builds',()=>{
