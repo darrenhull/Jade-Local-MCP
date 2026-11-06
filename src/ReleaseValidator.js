@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import {NativeDistribution} from './NativeDistribution.js';
 
 /** Validates this adapter's identity and built distribution, never a Jade database. */
 export class ReleaseValidator {
@@ -12,8 +13,7 @@ export class ReleaseValidator {
     const entry=manifest.bin?.['jade-mcp'];
     if(typeof entry!=='string'||path.isAbsolute(entry)||entry.split(/[\\/]/).includes('..')||!fs.existsSync(path.join(this.root,entry)))throw Error('A local jade-mcp entrypoint is required.');
     if(!manifest.dependencies?.['@modelcontextprotocol/server'])throw Error('The official MCP server SDK is required.');
-    const cli=manifest.dependencies?.['jade-tools-cli'];
-    if(typeof cli!=='string'||!cli.startsWith('file:packages/')||cli.includes('..')||!fs.existsSync(path.join(this.root,cli.slice(5))))throw Error('A committed pinned CLI release archive is required.');
+    new NativeDistribution(path.join(this.root,'packages/jade-cli-win-x64')).verify();
     return manifest;
   }
   verifyArtifacts(){

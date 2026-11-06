@@ -5,8 +5,8 @@ Their package LICENSE files and notices are retained in the standalone bundle.
 The Windows executable embeds Node.js v24.22.1. Its full license notice and
 third-party licenses are included as NODE-LICENSE.txt in the distribution.
 
-The CLI keeps its native runtime and vendored dependency notices under
-node_modules/jade-tools-cli. Jade vendor DLLs are not distributed here.
+The C++ CLI keeps its native runtime and vendored dependency notices under
+native/. It does not embed Node. Jade vendor DLLs are not distributed here.
 
 postject is a build-only dependency under the MIT license and is not required
 in the runtime distribution.

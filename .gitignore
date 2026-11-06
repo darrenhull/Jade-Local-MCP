@@ -1,7 +1,11 @@
 node_modules/
+.jade-automation/
+/native/
 dist/
 build/
 *.exe
+!packages/jade-cli-win-x64/*.exe
+!packages/jade-cli-win-x64/native/*.exe
 coverage/
 *.log
 *.tgz

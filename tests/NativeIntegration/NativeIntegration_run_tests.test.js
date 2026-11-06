@@ -20,6 +20,8 @@ function privateContext() {
   assert.ok(!sourceRelative.startsWith('..')&&!path.isAbsolute(sourceRelative)&&sourceRelative.startsWith('jade-cli-integration-seed-'),'User Source, normal Working and IDE databases are forbidden.');
   for(const key of ['workspace','storagePath','domainFile','testFile'])assert.ok(inside(root,context[key]),'Fixture path must stay inside its TEMP root: '+key);
   const settings=JSON.parse(fs.readFileSync(path.join(context.workspace,'jade.json'),'utf8'));
+  assert.equal(typeof context.schema,'string','The private fixture schema must be explicit.');
+  assert.equal(context.schema,settings.schema,'The inspection proof must filter the same unpublished fixture schema.');
   assert.equal(fs.realpathSync(settings.databasePath),source,'The actual project configuration must use the guarded private Source.');
   assert.ok(inside(path.dirname(source),settings.iniPath),'The connection INI must belong to the private Source seed.');
   assert.equal(fs.realpathSync(settings.storagePath),fs.realpathSync(context.storagePath));
@@ -101,9 +103,9 @@ test('native CLI and official MCP client use unpublished workspace dependencies 
     assert.equal(original.isError,false,JSON.stringify(original));
     assert.equal(original.structuredContent.body.readOnly,true);
     assert.equal(original.structuredContent.body.total,0,'The new workspace schema must never have been published to Source.');
-    const sessions=path.join(os.tmpdir(),'jade-tools-inspection');
+    const sessions=path.join(fixture.root,'broker','inspection');
     const owned=fs.readdirSync(sessions).filter(name=>name.endsWith('.json')).map(name=>path.join(sessions,name)).filter(file=>{
-      try{return JSON.parse(fs.readFileSync(file,'utf8')).databasePath===fixture.databasePath;}catch{return false;}
+      try{return fs.realpathSync(JSON.parse(fs.readFileSync(file,'utf8')).databasePath)===fs.realpathSync(fixture.databasePath);}catch{return false;}
     });
     assert.equal(owned.length,1,'An active native inspection retains its owned configuration.');
     assert.equal((await call('jade_close_inspection',{target:'source'})).isError,false);
@@ -117,6 +119,7 @@ test('native CLI and official MCP client use unpublished workspace dependencies 
     try {if(client)await client.callTool({name:'jade_shutdown',arguments:{}});else cli(['shutdown','--json']);}catch {}
     await client?.close();
     const evidence=process.env.JADE_MCP_NATIVE_EVIDENCE||path.join(fixture.root,'native-evidence.json');
+    fs.mkdirSync(path.dirname(evidence),{recursive:true});
     fs.writeFileSync(evidence,JSON.stringify({passed,error:errorText,standaloneCli:true,standaloneMcp:Boolean(process.env.JADE_MCP_STANDALONE_EXE),noNodeOnPATH:true,sourceNeverPublished:passed,records},null,2));
   }
 });

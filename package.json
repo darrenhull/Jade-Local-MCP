@@ -1,24 +1,26 @@
 {
   "devDependencies": {
     "@modelcontextprotocol/client": "2.4.0",
-    "postject": "1.0.0-alpha.6"
+    "postject": "1.0.0-alpha.6",
+    "jade-build-tools": "file:build-tools"
   },
   "private": true,
   "scripts": {
     "build": "node scripts/build.js",
     "release:check": "node scripts/release-check.js",
-    "test": "node --test tests/*/*_tests.test.js",
+    "test": "node --test tests/*/*_tests.test.js build-tools/tests/*/*_tests.test.js",
     "package:standalone": "node scripts/package-standalone.js",
     "start": "node bin/jade-mcp.js"
   },
   "name": "@jade-local-tools/mcp-server",
   "license": "UNLICENSED",
-  "description": "Local MCP server over the native Jade CLI shared SDK.",
+  "description": "Local official MCP SDK adapter over the native C++ Jade CLI.",
   "type": "module",
   "files": [
     "jade-mcp.exe",
     "bin",
     "src",
+    "native",
     "package.json",
     "README.md",
     "licenses",
@@ -32,13 +34,12 @@
   },
   "dependencies": {
     "zod": "4.6.7",
-    "jade-tools-cli": "file:packages/jade-tools-cli-0.1.1.tgz",
     "@modelcontextprotocol/server": "2.4.0"
   },
   "engines": {
     "node": ">=24.22.1"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "jadeMcp": {
     "serverImplemented": true
   }

@@ -1,10 +1,10 @@
 # Jade Local MCP
 
-Local MCP server over the Jade CLI/shared SDK, using the official MCP TypeScript SDK v2. The server exposes native compile/test and read-only browsing to compatible clients without opening the Jade IDE. Native operations require the configured Windows Jade installation.
+Local MCP server over the native C++ Jade CLI, using the official MCP TypeScript SDK v2. The server exposes native compile/test and read-only browsing to compatible clients without opening the Jade IDE. Native operations require the configured Windows Jade installation.
 
 ## Run the portable server
 
-Download and extract the complete `jade-mcp-win-x64.zip` release. Keep its `bin`, `src` and `node_modules` sidecars next to `jade-mcp.exe`. Node is embedded in the executable; end users do not need a separate Node installation or VS Code.
+Download and extract the complete `jade-mcp-win-x64.zip` release. Keep its `bin`, `src`, `native` and `node_modules` sidecars next to `jade-mcp.exe`. The MCP protocol adapter still uses the official JavaScript SDK and embeds Node in `jade-mcp.exe`; end users do not need a separate Node installation or VS Code. The separate `native/jade-cli.exe` is C++ and has no Node runtime. No JavaScript CLI/broker is used or included in the runtime bundle.
 
 ```powershell
 C:\Tools\jade-mcp\jade-mcp.exe --workspace C:\repos\MyJadeProject
@@ -49,7 +49,9 @@ VS Code and other Copilot clients have different configuration file formats. See
 
 All inspection tools default to `working`; `target: "source"` selects the configured Source database read-only. Class identities are schema-qualified; object OIDs and cursors remain tied to a target/session. Catalogue, test and source queries return bounded pages. Keep the same inspection session when paging a collection and close it before switching database identity.
 
-Build/test reuse the CLI broker and its native Jade session. The SDK handles dependency selection, successful-input change tracking and native errors. Results preserve real Jade codes, source diagnostics and individual test failures. A failed build or test is an MCP tool error with a structured result, not an empty success. MCP cancellation is forwarded to the owned broker operation.
+Database catalogue filtering and paging happen in the native helper before its response crosses the transport boundary. Progress output and embedded report logs retain at most their last 32,768 characters; diagnostics, test results and the full native log file path remain available.
+
+Build/test reuse the native CLI broker and its Jade session. C++ owns configuration discovery, dependency selection, successful-input change tracking and native operations. The MCP adapter only validates tool inputs and exchanges JSONL requests with `jade-cli.exe service --stdio`. Results preserve real Jade codes, source diagnostics and individual test failures. A failed build or test is an MCP tool error with a structured result. Cancellation covers owned requests waiting for startup as well as running operations.
 
 Resources `jade://capabilities` and `jade://workspace` describe the actual implemented surface and non-secret resolved workspace identity. Prompt `jade_check_changes` guides a compile/test workflow.
 
@@ -68,13 +70,15 @@ npm run package:standalone
 
 `npm test` uses the official MCP client for both in-memory protocol validation and a real stdio server/source-query integration. Default tests never connect to a Jade database. Native connected tests require explicit opt-in and disposable fixtures. To exercise the packaged EXE with Node removed from its PATH, set `JADE_MCP_STANDALONE_EXE` to the generated executable and run the tests again.
 
-The CLI release archive is committed under `packages/` and pinned by `package-lock.json`. Native semantics, broker ownership and the generic executable packager are reused from that package; this repository does not contain a second compiler or MCP protocol implementation. The runtime bundle includes only production dependencies and the CLI runtime sidecars, not development tools or a second Node executable.
+The verified native CLI distribution is committed under `packages/jade-cli-win-x64/`, with its identity and hashes in `distribution.json`. Build/package commands stage only its declared files into `native/`. Set `JADE_CLI_DISTRIBUTION` only when explicitly validating another candidate; normal builds use the committed package. This repository contains neither a second compiler nor a custom MCP protocol implementation. Its own `build-tools/` development package supplies the MCP executable packager and Node license. The lockfile references this committed local directory; no duplicate build-tools archive or legacy JavaScript CLI is installed or shipped.
 
 ## GitHub Actions and linked builds
 
-Builds and pull requests run source validation, protocol tests, Windows executable packaging, a no-Node-PATH executable test and distribution checksum checks. Tags matching `v<package version>` publish the tested ZIP, executable and `SHA256SUMS`. Download the complete ZIP: the standalone EXE asset alone still needs its sidecars.
+`main` is the default branch and the target for review pull requests. Your code-owner approval is required before merging; automation must open a PR rather than push product changes directly to `main`.
 
-The CLI updater polls stable CLI releases hourly and also accepts a manual release tag or `jade-cli-released` repository dispatch. Its shared SDK updater verifies release URLs, SHA-256 checksums, archive paths, version metadata and npm lock integrity. It then tests and packages the MCP server before opening a dependency PR. CI is explicitly dispatched on that branch because commits made with `GITHUB_TOKEN` do not trigger ordinary push workflows. Updates are reviewed before merge; they do not automatically change a Source database.
+Builds and pull requests run source validation, protocol tests, Windows executable packaging, a no-Node-PATH executable test and distribution checksum checks. Tags matching `v<package version>` can publish the tested ZIP, executable and `SHA256SUMS` only after their commit reaches reviewed `main`. Download the complete ZIP: the standalone EXE asset alone still needs its sidecars.
+
+The native migration replaces the old npm/TGZ runtime updater. `node scripts/update-cli.js --verify-lock` verifies the pinned native manifest and all runtime hashes. For updates, CI supplies `JADE_NATIVE_UPDATER_SCRIPT`, the absolute path to the product-integration PowerShell updater from an explicitly pinned extension automation checkout. The CLI repository owns only the CLI and Jade integration. The updater accepts only official stable CLI releases, verifies the ZIP checksum, bounds download and expanded sizes, rejects unsafe archive entries and validates every native manifest hash before atomically replacing the runtime. Downgrades are rejected. Updates must pass server/package tests and enter a reviewable dependency PR; they do not publish or change a Source database.
 
 Enable GitHub Actions' permission to create pull requests for the updater. A dedicated cross-repository token is optional for immediate release dispatch; polling and manual runs do not require one. Editable diagrams and source are tracked. Research notes, credentials, databases, caches, execution reports and generated distributions stay outside Git.
 

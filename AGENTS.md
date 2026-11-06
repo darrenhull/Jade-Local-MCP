@@ -2,7 +2,7 @@
 
 ## Architecture and responsibilities
 
-This repository owns the local MCP adapter, tool schemas, resources/prompts, client lifecycle and portable packaging. The official MCP SDK owns the protocol; the pinned Jade CLI/SDK owns native operations and database coordination.
+This repository owns the local MCP adapter, tool schemas, resources/prompts, client lifecycle and portable packaging. The official JavaScript MCP SDK owns the protocol; the pinned native C++ Jade CLI owns command preparation, native operations and database coordination. Keep the adapter thin; do not import the legacy JavaScript CLI SDK at runtime or implement a second native engine.
 
 - Test real protocol negotiation and stdio execution as well as in-memory behavior. Reserve stdout for protocol traffic and stderr for diagnostics.
 - Use explicit validated tool schemas, bounded structured results and truthful annotations. Expose no unrestricted shell/native escape hatch.
@@ -20,7 +20,7 @@ This repository owns the local MCP adapter, tool schemas, resources/prompts, cli
 - Keep one top-level class per source file, named for that class. Keep executable entry points thin. Cohesive stateless functions are appropriate; avoid artificial classes.
 - Store new tests under tests/{Class}/{Class}_{method}_tests.test.js (or .test.ts). Use the module name for functional modules and share realistic fixture setup.
 - Apply SOLID at actual boundaries: separate transport, configuration, orchestration, native execution and presentation; inject process/filesystem/network dependencies where tests need control.
-- Apply DRY across repositories: the CLI/SDK owns native semantics, shared sessions, dependency selection, release dependency updates and standalone packaging. Consumers use public versioned exports.
+- Apply DRY at repository boundaries: the native CLI owns Jade semantics, shared sessions and dependency selection. This repository owns MCP protocol integration and its build-tools package; product release-update automation belongs to the extension repository. Reuse versioned interfaces without putting consumer-specific tooling in the CLI.
 - Prefer maintained libraries and official SDKs for established protocols. Keep custom glue small and readable; avoid speculative abstractions and catch-and-ignore fallbacks.
 - Run focused tests first, then relevant regression/build/package checks. Default tests must not open a developer's Jade database; connected tests require explicit opt-in, disposable validated fixtures and cleanup of owned resources only.
 - Review the final diff for unintended files, secrets, stale comments and behavior changes. Document the final behavior, validation and practical limitations.
@@ -57,7 +57,9 @@ This repository owns the local MCP adapter, tool schemas, resources/prompts, cli
 
 ## Builds, releases and maintenance
 
-- Independent checkouts must build from committed inputs and lockfiles. The pinned CLI archive is an intentional consumer build dependency.
+- Target new pull requests at main. Preserve required code-owner approval; do not bypass it or push product changes directly to the protected default branch.
+
+- Independent checkouts must build from committed inputs and lockfiles. packages/jade-cli-win-x64 is the pinned native runtime; verify format, identity and every manifest hash before staging. The local build-tools package supplies only MCP development packaging utilities and must not enter runtime output. Do not restore the legacy CLI SDK dependency or a duplicate archive of local build-tools source.
 - Exclude credentials, user configuration, databases, caches, logs and research notes from Git. Track requested diagrams and build-required source, tests and notices.
 - Pin toolchains/dependencies and test the actual portable artifact outside the checkout without Node on PATH.
 - Validate PRs without publishing. Tags must match package versions and reference reviewed-default-branch commits. Do not merge PRs or create release tags without authorization.

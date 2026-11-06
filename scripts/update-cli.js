@@ -1,10 +1,15 @@
-import fs from 'node:fs';
 import path from 'node:path';
+import fs from 'node:fs';
+import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {createRequire} from 'node:module';
-const require=createRequire(import.meta.url),CliReleaseUpdater=require('jade-tools-cli/automation/cli-release-updater');
+import {NativeDistribution} from '../src/NativeDistribution.js';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 try{
-  if(process.argv[2]==='--verify-lock'){CliReleaseUpdater.verifyLock(root);console.log('CLI lockfile integrity verified.');}
-  else{const result=await new CliReleaseUpdater({root}).run(process.argv[2]||'');if(process.env.GITHUB_OUTPUT)for(const key of ['updated','tag','version','sha','branch'])if(result[key]!==undefined)fs.appendFileSync(process.env.GITHUB_OUTPUT,key+'='+result[key]+'\n');console.log(JSON.stringify(result,null,2));}
+  if(process.argv[2]==='--verify-lock'){new NativeDistribution(process.env.JADE_CLI_DISTRIBUTION||path.join(root,'packages/jade-cli-win-x64')).verify();console.log('Native CLI distribution integrity verified.');}
+  else {
+    const script=process.env.JADE_NATIVE_UPDATER_SCRIPT;
+    if(!script||!path.isAbsolute(script)||!fs.existsSync(script))throw Error('Set JADE_NATIVE_UPDATER_SCRIPT to the explicitly pinned shared native ZIP updater. Legacy JavaScript CLI updates are disabled.');
+    const result=spawnSync('pwsh',['-NoProfile','-NonInteractive','-File',script,'-Root',root,...(process.argv[2]?['-Tag',process.argv[2]]:[])],{stdio:'inherit',windowsHide:true,shell:false});
+    if(result.error)throw result.error;if(result.status!==0)process.exitCode=result.status||1;
+  }
 }catch(error){console.error(error.message);process.exitCode=1;}
