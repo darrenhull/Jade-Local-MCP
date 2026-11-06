@@ -10,9 +10,9 @@ test('full MCP builds run for PRs, main pushes and manual requests without dupli
  assert.equal((workflow.match(/if: github.event_name == 'push' && github.ref == 'refs\/heads\/main'/g)||[]).length,2);
  assert.doesNotMatch(workflow,/\n  open-agent-pr:/);assert.match(workflow,/\n  build:/);
 });
-test('MCP agent pushes reuse only the pinned consumer bot PR workflow without dispatching builds',()=>{
+test('MCP agent pushes use only the local bot PR workflow without dispatching duplicate builds',()=>{
  const workflow=read('agent-pr.yml');
  assert.match(workflow,/branches: \['codex\/agent\/\*\*'\]/);
- assert.match(workflow,/uses: darrenhull\/Jade-VSCode-Extension\/\.github\/workflows\/open-agent-pr\.yml@[a-f0-9]{40}/);
+ assert.match(workflow,/uses: \.\/\.github\/workflows\/open-agent-pr\.yml/);
  assert.doesNotMatch(workflow,/npm |setup-node@|actions: write|gh workflow run|workflow_dispatch/);
 });

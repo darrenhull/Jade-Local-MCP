@@ -16,7 +16,7 @@ concurrency:
 jobs:
   release-guard:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/release-ancestry.yml@892839dc2175a4a735ddf0be2356e7757616c9fd
+    uses: ./.github/workflows/release-ancestry.yml
 
   build:
     runs-on: windows-2022
@@ -62,9 +62,8 @@ jobs:
     needs: [build, release-guard]
     permissions:
       contents: write
-    uses: darrenhull/Jade-VSCode-Extension/.github/workflows/publish-consumer.yml@892839dc2175a4a735ddf0be2356e7757616c9fd
+    uses: ./.github/workflows/publish-consumer.yml
     with:
       artifact_name: jade-mcp-windows-x64
-      consumer_automation_ref: 892839dc2175a4a735ddf0be2356e7757616c9fd
       archive_name: jade-mcp-win-x64.zip
       executable_name: jade-mcp.exe

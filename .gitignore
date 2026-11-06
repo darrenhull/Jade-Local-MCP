@@ -1,5 +1,4 @@
 node_modules/
-.jade-automation/
 /native/
 dist/
 build/
@@ -9,7 +8,6 @@ build/
 coverage/
 *.log
 *.tgz
-!packages/jade-tools-cli-*.tgz
 .env
 .env.*
 !.env.example
