@@ -1,0 +1,7 @@
+{
+  "name": "@jade-local-tools/mcp-server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Planning scaffold for a local MCP adapter over the future published Jade SDK. No server is implemented.",
+  "license": "UNLICENSED"
+}

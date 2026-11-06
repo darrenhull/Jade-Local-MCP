@@ -1,0 +1,20 @@
+node_modules/
+dist/
+coverage/
+*.log
+*.tgz
+.env
+.env.*
+!.env.example
+.local/
+.cache/
+.DS_Store
+Thumbs.db
+
+# Local architecture/research notes are retained on disk, not shipped as source.
+/docs/
+/ROADMAP.md
+/*PLAN*.md
+/evidence/
+/archives/
+/planning/
