@@ -6,7 +6,7 @@ export const serverInstructions=[
   'Use saved workspace source, schema-qualified classes and database-specific OIDs/cursors. Native Jade owns compilation and execution; no Jade IDE is required.',
   'Build/test run in private Working, which is initially backed up/restored from Source. They never publish. Tests/scripts can change Working data; no automatic rollback is promised.',
   'Working is not an operating-system sandbox: executed Jade code can perform file, network and external operations allowed by the runtime.',
-  'Inspection is read-only. Error 3094 during backup requires checking the Source path and native recovery; do not silently recover, reset or repair Source without authorization.',
+  'Inspection is read-only for both Source and Working. Data tools accept typed catalogue/property/collection reads and session/cursor cleanup, never arbitrary evaluation, object mutation, publication or recovery. Native read-only database sessions enforce persistent-data protection; annotations alone do not. Fixed native access-policy and collection callbacks are not an operating-system sandbox. Error 3094 during backup requires checking the Source path and native recovery; do not silently recover, reset or repair Source without authorization.',
   'Report native codes, diagnostics and individual test outcomes; exit zero alone is not proof of success. Error Lens requires actual VS Code diagnostics.',
   'Use only advertised tools. Publication, extraction, authoring and DAP are not exposed by this server.'
 ].join(' ');

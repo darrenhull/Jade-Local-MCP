@@ -48,7 +48,11 @@ VS Code and other Copilot clients have different configuration file formats. See
 | `jade_disconnect` | Explicitly release idle shared native sessions. |
 | `jade_shutdown` | Explicitly stop the shared user broker and its owned native processes. |
 
-All inspection tools default to `working`; `target: "source"` selects the configured Source database read-only. Class identities are schema-qualified; object OIDs and cursors remain tied to a target/session. Catalogue, test and source queries return bounded pages. Keep the same inspection session when paging a collection and close it before switching database identity.
+All inspection tools are **read-only for both Source and Working**. They default to `working`; `target: "source"` selects the configured Source database. Class identities are schema-qualified; object OIDs and cursors remain tied to a target/session. Catalogue, test and source queries return bounded pages. Keep the same inspection session when paging a collection and close it before switching database identity.
+
+The data boundary is enforced through strict tool schemas, fixed native inspection operations and Object Manager `DB_READ_ONLY` sessions for both targets. Data tools do not accept arbitrary commands, nested native arguments, configuration overrides, expressions, setters, create/delete requests, transactions, publication or recovery. Catalogue/search text is a filter, not a query language or executable Jade source. Releasing a cursor or closing an inspection session changes transient inspection state only. Read-only annotations describe that boundary; they do not enforce it on their own. Build/test and explicit broker lifecycle tools are separate operations: build/test may change private Working data and are not advertised as read-only.
+
+Native inspection can call the fixed `allowedToInspect` access policy and collection iterator operations. The database's read-only mode protects persistent data; it is not an operating-system sandbox for application callbacks or their external file/network effects. Clients cannot supply arbitrary callback code or method names through data-tool arguments.
 
 Database catalogue filtering and paging happen in the native helper before its response crosses the transport boundary. Progress output and embedded report logs retain at most their last 32,768 characters; diagnostics, test results and the full native log file path remain available.
 
