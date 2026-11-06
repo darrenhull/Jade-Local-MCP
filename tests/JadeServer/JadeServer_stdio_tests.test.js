@@ -6,6 +6,7 @@ import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {Client} from '@modelcontextprotocol/client';
 import {StdioClientTransport} from '@modelcontextprotocol/client/stdio';
+import {TemporaryWorkspace} from '../../scripts/TemporaryWorkspace.js';
 
 for(const mode of ['legacy',{pin:'2026-07-28'}])test('real stdio server discovers config and queries schema-qualified files: '+JSON.stringify(mode),async()=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'jade-mcp-stdio-'));
@@ -26,5 +27,5 @@ for(const mode of ['legacy',{pin:'2026-07-28'}])test('real stdio server discover
     const workspace=await client.readResource({uri:'jade://workspace'});assert.deepEqual(JSON.parse(workspace.contents[0].text).workspaceRoots,[root]);
     const status=await client.callTool({name:'jade_status',arguments:{}});assert.ok(status.structuredContent.brokerPID>0);
   }catch(error){throw Error(error.message+'\nServer stderr: '+stderr,{cause:error});}
-  finally{try{await client.callTool({name:'jade_shutdown',arguments:{}});}catch{}await client.close();fs.rmSync(root,{recursive:true,force:true});}
+  finally{try{await client.callTool({name:'jade_shutdown',arguments:{}});}catch{}await client.close();TemporaryWorkspace.remove(root);}
 });
