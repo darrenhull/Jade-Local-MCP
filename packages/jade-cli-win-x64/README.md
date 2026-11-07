@@ -1,6 +1,6 @@
 # Jade CLI — native C++
 
-`jade-cli.exe` 0.3.1 is a native Windows C++ executable. Command handling, configuration discovery, the shared broker, dependency selection, Working database preparation and build/test orchestration run in C++. There is no embedded Node runtime, JavaScript engine or Python process in the CLI.
+`jade-cli.exe` 0.4.1 is a native Windows C++ executable. Command handling, configuration discovery, the shared broker, dependency selection, Working database preparation and build/test orchestration run in C++. There is no embedded Node runtime, JavaScript engine or Python process in the CLI.
 
 Jade's installed native tools and object manager perform compilation and execution. The distribution includes our native helper executables, not Jade vendor DLLs or a database. A compatible licensed Windows Jade installation is required for connected operations. Terminal commands and JSONL service requests use the same native implementation.
 
@@ -13,6 +13,7 @@ jade-cli init --profile demo --install C:\Jade2025
 jade-cli doctor --json
 jade-cli build --json
 jade-cli test .\FishTest.cls --json
+jade-cli workspace run .\scratch.jade --schema ExampleSchema --json
 jade-cli tests list --config jade.json --json
 jade-cli source search --config jade.json --query Fish --json
 jade-cli inspect catalog --config jade.json --target working --json
@@ -29,12 +30,33 @@ jade-cli build .\Fish.cls .\Hampster.cls
 jade-cli test .\FishTest.cls .\HampsterTests.cls
 ```
 
-Run `jade-cli build` without filenames to scan the configured project, including newly added files. It ignores any legacy selected `program` setting and compares current source against the last successful Working build. Unchanged native inputs are reused; method-only edits can use incremental CLS loads. New classes, schema declarations and other structural changes can require a broader native project load to preserve dependencies. A failed load invalidates its build claims, so retrying cannot silently skip the failure. This is independent of Git and does not publish to Source. Bare project builds currently require one workspace root.
+Run `jade-cli build` without filenames to scan the configured project, including newly added files. It ignores any legacy selected `program` setting and compares current source against the last successful Working build. Unchanged native inputs are reused; method-only edits can use incremental CLS loads. New classes, schema declarations and other structural changes can require a broader native project load to preserve dependencies. A failed load invalidates reusable build claims while retaining managed source identities, so retries cannot skip the failure or execute a removed local schema through stale Working definitions. This is independent of Git and does not publish to Source. Bare project builds currently require one workspace root.
 
 Multiple build files are supplied together to one native project build. Multiple test files run sequentially through the same shared session, with a result for each file and a failing exit status if any fails. Duplicate source arguments are removed. Quote paths containing spaces. Pass explicit filenames; wildcard expansion is not implemented. These commands use the isolated Working database and do not publish to Source.
 
 Structural schema compiler failures include native source diagnostics as well as their Jade error code. The helper captures only the current load's bounded compiler log. Unambiguous generated source lines map back to their original local file with the native position/length; ambiguous mappings retain the actual generated file and line rather than guessing a location. A successful retry clears the failed load's diagnostics.
 `--args` takes a JSON object with native inspection fields such as `classOid`, `oid`, `cursor` and `limit`. Pages are bounded to 100. Inspection defaults to Working; `--target source` explicitly selects the original database. Use the persistent service for cursor paging across requests.
+
+## Jade Workspace execution
+
+`jade-cli workspace run scratch.jade --schema ExampleSchema` executes a signature-free native Jade Workspace, for example:
+
+```jade
+vars
+    value : Integer;
+begin
+    value := 40 + 2;
+    write value;
+end;
+```
+
+The CLI prepares visible saved schema source in the private Working database before executing the supplied script. Saved headers and resources are included even when a schema has no class files. Within selected filesystem schemas, source is authoritative: removed local classes are removed from Working on the next preparation when the schema header declares completeDefinition; a partialDefinition header fails closed for class deletion; unrelated schema inventories are retained. Removing an entire managed schema header fails closed and requires restoring the header or an explicit complete project build. Each invocation has independent local variables. Committed persistent changes affect Working and can survive later runs; this is not an automatic rollback sandbox. The Source database is not the execution target and nothing is published. RootSchema script execution is rejected by Jade, so choose a user schema for compilation. Execution uses the fixed native RootSchemaApp application context. Custom application contexts are not exposed. `write` output is captured; interactive input, GUI code and Workspace debugging are not exposed. The initial execution mode is void, so print values rather than returning a value.
+
+The JSONL operation is `workspace.run`, with `config`, exact `sourceText`, an optional `source` URI label, and optional zero-based `lineOffset`/`columnOffset` for a selected source snapshot. The result preserves native compiler codes and UTF-16 positions/lengths in `report.diagnostics`, with one-based source line/column, plus `report.output`, execution state and Working identity. Clients must inspect `passed` and diagnostics: a handled Jade compiler error can accompany a native process exit code of zero. Cancellation/timeout stop the owned process; partial redirected output can remain buffered until exit.
+
+Workspace input is limited to 64 KiB of UTF-8 text; result output is bounded to 256 KiB and indicates truncation. Standard input is closed: a Jade `read` receives EOF/default input instead of asking the user, so code containing `read` may still complete with an empty/default value. The verified `jadclient` runtime emits redirected output using the Windows ANSI code page, which the CLI decodes before returning UTF-8 JSON. `outputEncoding` identifies that code page. Jade can replace characters unavailable in that encoding, so this path does not promise lossless Unicode console output. The source snapshot and native diagnostic positions remain Unicode.
+
+Structural load errors also use Jade's per-load compiler log. An unambiguous source line is mapped back to its original local file. If a generated line cannot be identified uniquely, the diagnostic retains the actual generated file and native location rather than guessing a user source line.
 
 ## Project setup
 
@@ -54,7 +76,7 @@ jade-cli test .\FishTest.cls .\HampsterTests.cls
 
 The installation path lives in your private `%LOCALAPPDATA%/JadeTools/connections.json`, outside the repository. The CLI infers the Source database as `<installPath>/system`, its INI as `<databasePath>/jade.ini`, the workspace root as the folder containing `jade.json`, and private Working storage as `%LOCALAPPDATA%/JadeTools/projects`. Working identities include workspace roots, so separate projects keep separate Working databases. Initialization writes configuration only; it does not connect, extract, compile or publish source.
 
-A missing `jade.json` is initialized automatically by `build` or `test`. With one saved connection it is selected automatically. With several, use `--profile demo`; an interactive terminal can choose from a list. With no saved connection, use `--install`, set `JADE_INSTALL` (or `JADE_HOME`), or enter the installation folder when prompted. Piped input, JSONL services and CI never prompt: ambiguous or missing setup returns a clear configuration error. An explicitly named missing `--config` file is an error, rather than an implicit new project.
+A missing `jade.json` is initialized automatically by `build`, `test` or `workspace run`. With one saved connection it is selected automatically. With several, use `--profile demo`; an interactive terminal can choose from a list. With no saved connection, use `--install`, set `JADE_INSTALL` (or `JADE_HOME`), or enter the installation folder when prompted. Piped input, JSONL services and CI never prompt: ambiguous or missing setup returns a clear configuration error. An explicitly named missing `--config` file is an error, rather than an implicit new project.
 
 Reuse the connection in another project:
 
@@ -83,7 +105,7 @@ Project overrides remain optional and relative to `jade.json`:
 }
 ```
 
-Command-line `--profile`, `--install`, `--database`, `--ini` and `--server` override the selected configuration for that invocation. Source arguments remain relative to the terminal folder. `--workspace` selects a workspace root. Full legacy JSON configurations with explicit `installPath`, `databasePath`, `iniPath`, `storagePath` and other settings continue to work. Optional `files`, `methods`, `testDependencyScope`, `workingDatabaseDirectory`, `workingDatabaseGeneration` and `timeoutMilliseconds` retain their engine meanings. Credentials are session inputs, not checked-in configuration.
+Command-line `--profile`, `--install`, `--database`, `--ini`, `--server` and `--schema` override the selected configuration for that invocation. Source arguments remain relative to the terminal folder. `--workspace` selects a workspace root. Full legacy JSON configurations with explicit `installPath`, `databasePath`, `iniPath`, `storagePath` and other settings continue to work. Optional `files`, `methods`, `testDependencyScope`, `workingDatabaseDirectory`, `workingDatabaseGeneration` and `timeoutMilliseconds` retain their engine meanings. Credentials are session inputs, not checked-in configuration.
 
 For isolated automation, `JADE_TOOLS_CONNECTIONS_FILE` selects an absolute private profile-file path. For example:
 
@@ -121,9 +143,13 @@ SingleUser Source must be available for initial backup. MultiUser Source uses na
 {"id":"2","command":"cancel","operationId":"1"}
 ```
 
-`config` accepts a private connection reference such as `{ "connection": "demo", "workspaceRoots": ["C:/repos/example"] }`, installation-only settings with inferred defaults, or the existing fully resolved settings. Native operations require a configured connection. Service setup is noninteractive; `{ "command": "cli", "operation": "init", "argv": ["--profile", "demo"], "cwd": "C:/repos/example" }` initializes a project without opening the database. Events are `{id,event:"output",text}` and `{id,event:"result",result}`. Build/test results include `code`, `passed`, `cancelled`, `report`, diagnostics and test outcomes. Commands: `doctor`, `status`, `build`, `test`, `tests.list`, `source.search`, `inspect.catalog`, `inspect.instances`, `inspect.object`, `inspect.collection`, `inspect.release`, `inspect.close`, `disconnect`, `cancel`, `shutdown`.
+`config` accepts a private connection reference such as `{ "connection": "demo", "workspaceRoots": ["C:/repos/example"] }`, installation-only settings with inferred defaults, or the existing fully resolved settings. Native operations require a configured connection. Service setup is noninteractive; `{ "command": "cli", "operation": "init", "argv": ["--profile", "demo"], "cwd": "C:/repos/example" }` initializes a project without opening the database. Events are `{id,event:"output",text}` and `{id,event:"result",result}`. Build/test results include `code`, `passed`, `cancelled`, `report`, diagnostics and test outcomes. Commands: `doctor`, `status`, `build`, `test`, `workspace.run`, `tests.list`, `source.search`, `inspect.catalog`, `inspect.instances`, `inspect.object`, `inspect.collection`, `inspect.release`, `inspect.close`, `disconnect`, `cancel`, `shutdown`.
 
 Inspection sessions bind target/configuration identity. Close an old session before changing target; object identities and cursors never transfer between Source and Working. Client transport loss cancels its active jobs and closes its owned helper/inspection sessions. Successful idle compile/test state can remain warm in the broker.
+
+Inspection returns Jade's own object identity strings unchanged, using the fixed native `getObjectStringForObject` formatter and `String.asObject` parser. This includes native transient/shared-transient and subobject distinctions; for example, a persistent object can be `9002.1`. Existing `oid` fields, catalog identities and reference-valued properties use this representation. Native identity strings are opaque to clients: do not construct, trim, decode or reinterpret them. Cursor and session tokens remain separate opaque transport identifiers.
+
+Inspection accepts bounded native identity strings (1–512 UTF-8 bytes without ASCII control characters). The old 44-character packed hexadecimal representation remains an input-only compatibility format. Parsing an identity does not establish that an object exists or that access is permitted: the selected database and native inspection authorization still apply. `distribution.json.oidFormat`, `doctor.capabilities.oidFormat`, helper ready packets and inspection response bodies advertise `jade-native`; adapters must check this capability before accepting the new identities. Both Source and Working data inspection use native read-only sessions. Compilation, tests and Workspace execution retain their separate private Working write semantics.
 
 Native gateways `native.run` and `helper inspect|debug|compiler [session.json]` preserve Jade's native protocols. Utilities are restricted to `jadclient`, `jadloadb`, `jdbutilb` and `jdbadmin` in the configured installation. These are trusted local interfaces; callers remain responsible for authorizing Source writes. The helper gateway forwards native stdio under a broker lease. Version-pinned debugger ABI checks remain active. Arbitrary expressions, GUI hosting and unrestricted attach are not added.
 
@@ -142,6 +168,17 @@ The script compiles the native library, runs grouped C++ tests, and builds `dist
 Tests cover configuration and positional arguments, schema-qualified discovery, process quoting/cancellation, source staging, diagnostics, warm sessions, broker startup races, authentication, client ownership, helper leases and recovery. The [test coverage matrix](native-cli/tests/README.md) identifies each test group and its limits. Default tests do not open a developer database. The explicit `JADE_CPP_TEST_SEED` connected proof accepts a private disposable TEMP database and validates actual Jade compilation and test execution. Hosted CI does not claim connected coverage without the licensed runtime.
 
 Rebuilding Jade helper executables also requires the installed Jade SDK. No Jade vendor DLLs, databases, credentials or generated evidence belong in Git. The previous Node implementation is preserved on the `codex/agent/ci-releases` branch (with a local `codex/node-cli-baseline` checkpoint) for comparison; it is not included in the native distribution.
+
+The explicit native identity proof is `tests/NativeOid/NativeOid_roundtrip_tests.ps1 -JadeHome <licensed-install> -Seed <private-TEMP-integration-seed>`. It validates native formatting/parsing for persistent, transient, shared-transient and subobject identities, shared inspector output paths and unchanged primitive strings. `JADE_CPP_OID_TEST_SEED` enables the grouped `NativeOid_inspection_native_tests` proof through actual Source and Working inspection sessions against a disposable private seed. Default hosted tests skip connected proofs.
+
+Both C++ proof entry points independently validate the seed's mutable INI directories before opening Jade, including when invoked directly. The service proof also requires a version-matched staged distribution with verified manifest/runtime hashes; it never searches the checkout or falls back to an older helper. Run it from the repository root:
+
+```powershell
+./scripts/build-native-cli.ps1 -SkipTests
+$env:JADE_CPP_TEST_DISTRIBUTION = (Resolve-Path dist/jade-cli-win-x64).Path
+$env:JADE_CPP_OID_TEST_SEED = '<private native-restored TEMP seed root>'
+./scripts/build-native-cli.ps1 -TestsOnly -TestFilter NativeOid_inspection_native_tests
+```
 
 
 ## GitHub builds and releases

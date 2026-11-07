@@ -65,6 +65,7 @@ This repository owns the local MCP adapter, tool schemas, resources/prompts, cli
 - Exclude credentials, user configuration, databases, caches, logs and research notes from Git. Track requested diagrams and build-required source, tests and notices.
 - Pin toolchains/dependencies and test the actual portable artifact outside the checkout without Node on PATH.
 - Validate PRs without publishing. Tags must match package versions and reference reviewed-default-branch commits. Do not merge PRs or create release tags without authorization.
+- Write customer release notes in `.github/release-notes/<package-version>.md`, describing only user-visible features actually included. Keep workflow changes, dependency receipts, review process and unfinished work in developer documentation. Verify the matching notes file before declaring a release PR ready; do not generate notes from PR history.
 - Keep README, examples, capabilities and diagrams aligned with implemented behavior. Distinguish hosted CI from connected checks requiring the licensed Jade runtime.
 
 ## Code Review Rules

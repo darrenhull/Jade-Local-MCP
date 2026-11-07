@@ -54,9 +54,11 @@ class ReleasePublisher {
     if(ref.status===0&&ref.stdout.trim()!==sha)throw Error('The release tag points to a different commit.');
     if(existing&&ref.status!==0&&existing.target_commitish!==sha)throw Error('The draft release belongs to a different commit.');
     const assets=this.assets(directory);
-    if(!existing)this.command('gh',['release','create',tag,'--repo',repository,'--draft','--target',sha,'--title',tag,'--generate-notes']);
+    const notesFile=path.join(this.root,'.github','release-notes',version+'.md');
+    if(!fs.existsSync(notesFile)||!fs.statSync(notesFile).isFile()||!fs.readFileSync(notesFile,'utf8').trim())throw Error('Non-empty consumer release notes are required for '+tag+'.');
+    if(!existing)this.command('gh',['release','create',tag,'--repo',repository,'--draft','--target',sha,'--title',tag,'--notes-file',notesFile]);
     this.command('gh',['release','upload',tag,...assets,'--repo',repository,'--clobber']);
-    this.command('gh',['release','edit',tag,'--repo',repository,'--draft=false','--latest']);
+    this.command('gh',['release','edit',tag,'--repo',repository,'--notes-file',notesFile,'--draft=false','--latest']);
     return {published:true,skipped:false,tag,sha};
   }
 }
