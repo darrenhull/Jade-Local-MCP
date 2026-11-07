@@ -78,6 +78,9 @@ test('real MCP inspection preserves native identities and read-only session boun
   };
   try {
     await api.server.connect(serverTransport); await client.connect(clientTransport);
+    const doctor = await inspect('jade_doctor', {});
+    assert.equal(doctor.isError, false, JSON.stringify(doctor));
+    assert.equal(doctor.structuredContent.capabilities.oidFormat, 'jade-native');
     const configuration = await native.submit({...workspace.prepare('doctor'), command: 'prepare'}).completion;
     assert.equal(configuration.passed, true, JSON.stringify(configuration));
     const preparation = native.submit({command: 'working.prepare', config: configuration.prepared.config, cwd: fixture.workspace});
@@ -85,12 +88,12 @@ test('real MCP inspection preserves native identities and read-only session boun
     records.push({name: 'private-fixture Working preparation (not a data tool)', result: prepared});
     assert.equal(prepared.passed, true, JSON.stringify(prepared));
     // Prepare private Working before opening a Source SingleUser inspection.
-    body(await inspect('jade_inspect_catalog', {target: 'working', sessionId: 'prepare-working', includeSystem: true, query: 'Schema', limit: 10}), 'working', 'prepare-working');
+    body(await inspect('jade_inspect_catalog', {target: 'working', sessionId: 'prepare-working', includeSystem: true, schema: 'RootSchema', query: 'RootSchema::Schema', limit: 10}), 'working', 'prepare-working');
     await inspect('jade_close_inspection', {target: 'working', sessionId: 'prepare-working'});
     let sourceCursor;
     for (const target of ['source', 'working']) {
       const sessionId = 'identity-' + target;
-      const catalogue = body(await inspect('jade_inspect_catalog', {target, sessionId, includeSystem: true, query: 'Schema', limit: 100}), target, sessionId);
+      const catalogue = body(await inspect('jade_inspect_catalog', {target, sessionId, includeSystem: true, schema: 'RootSchema', query: 'RootSchema::Schema', limit: 100}), target, sessionId);
       assert.equal(catalogue.readOnly, true);
       const configurations = fs.readdirSync(path.join(fixture.root, 'broker/inspection')).filter(name => name.endsWith('.json')).map(name => JSON.parse(fs.readFileSync(path.join(fixture.root, 'broker/inspection', name), 'utf8')));
       const sourcePath = fs.realpathSync(fixture.databasePath);
@@ -103,24 +106,28 @@ test('real MCP inspection preserves native identities and read-only session boun
       const object = body(await inspect('jade_inspect_object', {target, sessionId, oid: '1.1'}), target, sessionId);
       assert.equal(object.oid, '1.1');
       assert.equal(object.readOnly, true);
-      const instances = body(await inspect('jade_inspect_instances', {target, sessionId, classOid: schemaClass.oid, limit: 2}), target, sessionId);
+      if (target === 'working' && sourceCursor) {
+        const crossed = await inspect('jade_inspect_instances', {target, sessionId, classOid: schemaClass.oid, cursor: sourceCursor, limit: 1});
+        assert.equal(crossed.isError, true, 'A Source cursor cannot create a query in another session.');
+      }
+      const instances = body(await inspect('jade_inspect_instances', {target, sessionId, classOid: schemaClass.oid, limit: 1}), target, sessionId);
       assert.equal(instances.readOnly, true);
-      if (instances.cursor) await inspect('jade_release_cursor', {target, sessionId, cursor: instances.cursor});
-      let collection;
-      for (const reference of object.properties.filter(property => typeof property.oid === 'string').slice(0, 20)) {
+      if (target === 'source') { sourceCursor = instances.cursor; assert.ok(sourceCursor, 'This private fixture must provide a real paged Schema query.'); }
+      if (instances.cursor && target === 'working') await inspect('jade_release_cursor', {target, sessionId, cursor: instances.cursor});
+      const metadata = body(await inspect('jade_inspect_object', {target, sessionId, oid: schemaClass.oid}), target, sessionId);
+      let collection, page;
+      for (const reference of [...object.properties, ...metadata.properties].filter(property => typeof property.oid === 'string').slice(0, 40)) {
         const referenced = body(await inspect('jade_inspect_object', {target, sessionId, oid: reference.oid}), target, sessionId);
         assert.equal(referenced.oid, reference.oid);
-        if (referenced.collection) { collection = referenced.oid; break; }
+        if (referenced.collection) {
+          const candidate = body(await inspect('jade_inspect_collection', {target, sessionId, oid: referenced.oid, limit: 2}), target, sessionId);
+          if (candidate.items.length) { collection = referenced.oid; page = candidate; break; }
+          if (candidate.cursor) await inspect('jade_release_cursor', {target, sessionId, cursor: candidate.cursor});
+        }
       }
-      assert.ok(collection, 'A real Schema collection reference is required.');
-      const page = body(await inspect('jade_inspect_collection', {target, sessionId, oid: collection, limit: 2}), target, sessionId);
+      assert.ok(collection, 'A real nonempty Schema/class metadata collection reference is required.');
       assert.equal(page.readOnly, true);
-      if (target === 'source') sourceCursor = page.cursor;
-      if (target === 'working' && sourceCursor) {
-        const crossed = await inspect('jade_inspect_collection', {target, sessionId, oid: collection, cursor: sourceCursor, limit: 2});
-        assert.equal(crossed.isError, true, 'A Source cursor cannot page a Working query.');
-      }
-      if (page.cursor && target === 'working') await inspect('jade_release_cursor', {target, sessionId, cursor: page.cursor});
+      if (page.cursor) await inspect('jade_release_cursor', {target, sessionId, cursor: page.cursor});
       const invalid = await inspect('jade_inspect_object', {target, sessionId, oid: 'not a native Jade object identity'});
       assert.equal(invalid.isError, true);
       const recovered = body(await inspect('jade_inspect_object', {target, sessionId, oid: object.oid}), target, sessionId);
