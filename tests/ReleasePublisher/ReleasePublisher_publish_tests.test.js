@@ -7,6 +7,7 @@ const sha='a'.repeat(40),other='b'.repeat(40);
 function fixture(t,{existing,tagSha,approved=true,publishedApproved=true,missingPublished=false,tamperedPublished=false}={}){
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'jade-release-publisher-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  fs.writeFileSync(path.join(root,'package.json'),JSON.stringify({version:'1.2.3'}));fs.mkdirSync(path.join(root,'release'));
+ fs.mkdirSync(path.join(root,'.github','release-notes'),{recursive:true});fs.writeFileSync(path.join(root,'.github','release-notes','1.2.3.md'),'## New features\n\n- Native Jade object identities.\n');
  fs.writeFileSync(path.join(root,'release','product.zip'),'verified artifact');
  fs.writeFileSync(path.join(root,'release','SHA256SUMS'),crypto.createHash('sha256').update('verified artifact').digest('hex')+'  product.zip\n');
  const calls=[];
@@ -27,3 +28,26 @@ test('rejects mismatched tags, unreviewed commits and altered assets before publ
 });
 
 test('published versions are skipped only after approved tag and existing assets are verified',t=>{for(const options of [{publishedApproved:false},{missingPublished:true},{tamperedPublished:true}]){const f=fixture(t,{existing:{draft:false,target_commitish:other},tagSha:other,...options});assert.throws(()=>f.publisher.publish({repository:'darrenhull/Jade-Local-MCP',sha}),/approved main|missing|checksum/i);assert.equal(f.calls.some(c=>c.args[1]==='upload'||c.args[1]==='edit'),false);}});
+
+test('publishes only the matching version consumer notes and never generates PR history',t=>{
+ const f=fixture(t);fs.writeFileSync(path.join(f.root,'.github','release-notes','9.9.9.md'),'Unshipped feature');
+ f.publisher.publish({repository:'darrenhull/Jade-Local-MCP',sha});
+ const create=f.calls.find(c=>c.args[0]==='release'&&c.args[1]==='create');
+ assert.equal(create.args.includes('--generate-notes'),false);
+ assert.equal(create.args[create.args.indexOf('--notes-file')+1],path.join(f.root,'.github','release-notes','1.2.3.md'));
+});
+
+test('refreshes a retryable draft with the reviewed current-version notes before publication',t=>{
+ const f=fixture(t,{existing:{draft:true,target_commitish:sha},tagSha:sha});f.publisher.publish({repository:'darrenhull/Jade-Local-MCP',sha});
+ const edit=f.calls.find(c=>c.args[0]==='release'&&c.args[1]==='edit');
+ assert.equal(edit.args[edit.args.indexOf('--notes-file')+1],path.join(f.root,'.github','release-notes','1.2.3.md'));
+});
+
+test('missing or blank current-version notes fail before any release mutation',t=>{
+ for(const contents of [null,' \r\n ']){
+  const f=fixture(t),notes=path.join(f.root,'.github','release-notes','1.2.3.md');
+  if(contents===null)fs.unlinkSync(notes);else fs.writeFileSync(notes,contents);
+  assert.throws(()=>f.publisher.publish({repository:'darrenhull/Jade-Local-MCP',sha}),/release notes/i);
+  assert.equal(f.calls.some(c=>c.args[0]==='release'),false);
+ }
+});
