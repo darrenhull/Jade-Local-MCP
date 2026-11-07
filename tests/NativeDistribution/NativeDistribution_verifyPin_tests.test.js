@@ -16,3 +16,13 @@ test('a canonical-identity consumer rejects a verified older native release',t=>
  f.manifest.oidFormat='jade-native';fs.writeFileSync(f.file,JSON.stringify(f.manifest));f.pin.distributionSha256=hash(fs.readFileSync(f.file));f.save();
  assert.equal(new NativeDistribution(f.source).verifyPin(f.pinFile,{oidFormat:'jade-native'}).manifest.oidFormat,'jade-native');
 });
+
+test('canonical identity requirements accept newer native versions and reject an older version even with a marker',t=>{
+ for(const [version,accepted] of [['0.3.1',false],['0.3.2',true],['0.4.1',true],['1.0.0',true]]){
+  const f=fixture(t);f.manifest.packageVersion=version;f.manifest.oidFormat='jade-native';fs.writeFileSync(f.file,JSON.stringify(f.manifest));
+  f.pin.version=version;f.pin.tag='v'+version;f.pin.distributionSha256=hash(fs.readFileSync(f.file));f.save();
+  const verify=()=>new NativeDistribution(f.source).verifyPin(f.pinFile,{minimumVersion:'0.3.2',oidFormat:'jade-native'});
+  if(accepted)assert.equal(verify().manifest.packageVersion,version);
+  else assert.throws(verify,/version.*0\.3\.2/i);
+ }
+});

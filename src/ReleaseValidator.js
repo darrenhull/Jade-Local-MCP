@@ -14,7 +14,7 @@ export class ReleaseValidator {
     if(typeof entry!=='string'||path.isAbsolute(entry)||entry.split(/[\\/]/).includes('..')||!fs.existsSync(path.join(this.root,entry)))throw Error('A local jade-mcp entrypoint is required.');
     if(!manifest.dependencies?.['@modelcontextprotocol/server'])throw Error('The official MCP server SDK is required.');
     const native=new NativeDistribution(path.join(this.root,'packages/jade-cli-win-x64'));
-    if(manifest.jadeMcp?.requiredOidFormat)native.verifyPin(path.join(this.root,'packages/jade-cli-pin.json'),{oidFormat:manifest.jadeMcp.requiredOidFormat});
+    if(manifest.jadeMcp?.requiredOidFormat||manifest.jadeMcp?.minimumCliVersion)native.verifyPin(path.join(this.root,'packages/jade-cli-pin.json'),{oidFormat:manifest.jadeMcp.requiredOidFormat,minimumVersion:manifest.jadeMcp.minimumCliVersion});
     else native.verify();
     return manifest;
   }
