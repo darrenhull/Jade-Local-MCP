@@ -20,7 +20,7 @@ async function connect(t) {
   const requests = [];
   const native = {submit(request) {
     requests.push(request);
-    return {id: String(requests.length), completion: Promise.resolve({code: 0, passed: true, body: {rows: []}})};
+    return {id: String(requests.length), completion: Promise.resolve({code: 0, passed: true, body: {rows: [], oidFormat: 'jade-native'}})};
   }};
   const workspace = new Workspace({cwd: process.cwd()});
   const api = new JadeServer({operations: new JadeOperations({workspace, client: native}), workspace});
@@ -70,7 +70,7 @@ test('inspection tools preserve valid Source and Working identity through fixed 
 
 test('invalid database identity and nested OID inputs cannot reach inspection handlers', async t => {
   const {client, requests} = await connect(t);
-  for (const input of [{oid: {value: oid, set: true}}, {oid: 'delete Object'}, {oid, target: 'source --write'}, {oid, sessionId: {path: '../source'}}]) {
+  for (const input of [{oid: {value: oid, set: true}}, {oid, target: 'source --write'}, {oid, sessionId: {path: '../source'}}]) {
     const result = await client.callTool({name: 'jade_inspect_object', arguments: input});
     assert.equal(result.isError, true);
   }
@@ -103,6 +103,6 @@ test('discovery distinguishes read-only inspection of both targets from Working 
   for (const name of ['jade_build', 'jade_test']) assert.equal(tools.find(value => value.name === name).annotations.readOnlyHint, false);
   for (const name of ['jade_execute', 'jade_query', 'jade_publish', 'jade_set_property', 'jade_delete_object', 'native.run']) assert.equal(tools.some(tool => tool.name === name), false);
   const resource = await client.readResource({uri: 'jade://capabilities'});
-  assert.deepEqual(JSON.parse(resource.contents[0].text).inspection, {targets: ['source', 'working'], readOnly: true, arbitraryEvaluation: false});
+  assert.deepEqual(JSON.parse(resource.contents[0].text).inspection, {targets: ['source', 'working'], readOnly: true, arbitraryEvaluation: false, oidFormat: 'jade-native', minimumCliVersion: '0.3.2'});
   assert.match(client.getInstructions(), /read.only.*(?:Source.*Working|Working.*Source)/i);
 });

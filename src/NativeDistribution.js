@@ -5,13 +5,14 @@ import crypto from 'node:crypto';
 /** Build-time validation of the pinned native CLI; never executes its contents. */
 export class NativeDistribution {
   constructor(source){this.source=path.resolve(source);}
-  verifyPin(pinFile){
+  verifyPin(pinFile,{oidFormat}={}){
     const pin=JSON.parse(fs.readFileSync(pinFile,'utf8'));
     if(typeof pin.version!=='string'||!/^\d+\.\d+\.\d+$/.test(pin.version)||pin.tag!=='v'+pin.version||typeof pin.sha256!=='string'||!/^[a-f0-9]{64}$/i.test(pin.sha256)||typeof pin.distributionSha256!=='string'||!/^[a-f0-9]{64}$/i.test(pin.distributionSha256))throw Error('Invalid native CLI release pin receipt.');
     const actual=crypto.createHash('sha256').update(fs.readFileSync(path.join(this.source,'distribution.json'))).digest('hex');
     if(actual!==pin.distributionSha256.toLowerCase())throw Error('Native CLI manifest differs from the release install receipt.');
     const result=this.verify();
     if(result.manifest.packageVersion!==pin.version)throw Error('Native CLI release version differs from its pin.');
+    if(oidFormat&&result.manifest.oidFormat!==oidFormat)throw Error('Required native object identity capability oidFormat '+oidFormat+' is missing. Use an official compatible Jade CLI release.');
     for(const name of ['jade-test-helper.exe','jade-native-helper.exe','jade-debug-helper.exe','jade-inspect-helper.exe','debugger-abi.json'])if(!result.files.has('native/'+name))throw Error('Mandatory native CLI helper is missing: '+name);
     return result;
   }

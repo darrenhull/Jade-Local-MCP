@@ -19,6 +19,7 @@ export class JadeOperations {
     if(command==='cancel')return this.cancel(input.operationId);
     const prepared=this.workspace.prepare(command,input);
     let result=await this.workspace.run(prepared,request=>this.invoke(request,context));
+    if(command.startsWith('inspect.')&&result.passed&&result.body?.oidFormat!=='jade-native')throw Error('Native Jade identities require Jade CLI 0.3.2 or later with oidFormat jade-native. Update the verified native dependency.');
     if(command.startsWith('inspect.'))result={...result,target:input.target||'working',sessionId:input.sessionId||'default'};
     if(command==='inspect.catalog'&&result.passed&&!Array.isArray(result.body?.rows))throw Error('Native CLI did not return a paged class catalogue. Update the pinned CLI distribution.');
     if(Array.isArray(result.rows))return {...result,next_offset:result.offset+result.rows.length<result.total?result.offset+result.rows.length:null};

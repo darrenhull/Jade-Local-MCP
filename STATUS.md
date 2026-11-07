@@ -29,3 +29,10 @@ The source checkout/workspaces are scheduled to move to `C:\Git` after all agent
 - Native enforcement was traced separately: the CLI forces read-only selection for both targets; the production inspection helper independently signs on with Object Manager `DB_READ_ONLY` (usage 1). Caller configuration cannot make that helper writable. Operation names and transport request IDs are set by the trusted session, OIDs are validated, and cursors remain bound to their inspection query/session.
 - No writable inspection route was found. Data tools cannot persistently update either database or select arbitrary Jade scripts/methods. Fixed `allowedToInspect`/development-security and iterator callbacks remain intact; database read-only mode is not an operating-system sandbox for their external effects.
 - Build/test and broker lifecycle tools remain separate from read-only data tools. Default audit tests use mocked native transport and real MCP protocol validation; no Source database was opened or modified.
+
+## Native Jade identity candidate
+
+- A separate MCP 0.3.4 candidate is being prepared for the official CLI 0.3.2 `oidFormat: jade-native` capability. The installed MCP remains 0.3.2; this checkpoint does not claim that its old bundled CLI already returns canonical identities.
+- MCP passes native identity fields and all non-identity data through unchanged. Bounded scalar lookup input goes to the fixed native parser, with legacy 44-hex input compatibility. Opaque cursor/session/job tokens remain separate.
+- Protocol regressions cover input byte/control limits, both-target/session routing, native error preservation, every nested response shape and rejection of an old backend's unmarked raw identity output. These are transport contract tests; actual vendor formatter/parser validity requires the native candidate/official release proof.
+- Build/release is deliberately blocked until a verified official native distribution advertises the required identity capability. No fabricated receipt, vendor binary or guessed ID conversion is included. The original read-only audit remains an independent review item.
