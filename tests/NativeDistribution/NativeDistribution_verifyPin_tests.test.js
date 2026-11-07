@@ -26,3 +26,14 @@ test('canonical identity requirements accept newer native versions and reject an
   else assert.throws(verify,/version.*0\.3\.2/i);
  }
 });
+
+
+test('current MCP requirements reject CLI 0.4.1 and accept the verified package-capable 0.4.2 backend',t=>{
+ const requirements=JSON.parse(fs.readFileSync(new URL('../../package.json',import.meta.url),'utf8')).jadeMcp;
+ for(const [version,accepted] of [['0.4.1',false],['0.4.2',true]]){
+  const f=fixture(t);f.manifest.packageVersion=version;f.manifest.oidFormat='jade-native';fs.writeFileSync(f.file,JSON.stringify(f.manifest));
+  f.pin.version=version;f.pin.tag='v'+version;f.pin.distributionSha256=hash(fs.readFileSync(f.file));f.save();
+  const verify=()=>new NativeDistribution(f.source).verifyPin(f.pinFile,{minimumVersion:requirements.minimumCliVersion,oidFormat:requirements.requiredOidFormat});
+  if(accepted)assert.equal(verify().manifest.packageVersion,version);else assert.throws(verify,/version.*0\.4\.2/i);
+ }
+});

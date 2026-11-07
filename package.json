@@ -44,6 +44,6 @@
   "jadeMcp": {
     "serverImplemented": true,
     "requiredOidFormat": "jade-native",
-    "minimumCliVersion": "0.3.2"
+    "minimumCliVersion": "0.4.2"
   }
 }
