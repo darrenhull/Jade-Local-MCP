@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import crypto from 'node:crypto';
+import {fileURLToPath} from 'node:url';
 import {NativeDistribution} from '../../src/NativeDistribution.js';
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 function fixture(t){const root=fs.mkdtempSync(path.join(os.tmpdir(),'mcp-native-pin-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));const source=path.join(root,'distribution');fs.mkdirSync(path.join(source,'native'),{recursive:true});const runtimeFiles={};for(const name of ['jade-test-helper.exe','jade-native-helper.exe','jade-debug-helper.exe','jade-inspect-helper.exe','debugger-abi.json']){const relative='native/'+name;fs.writeFileSync(path.join(source,relative),name);runtimeFiles[relative]=hash(name);}fs.writeFileSync(path.join(source,'jade-cli.exe'),'native');const manifest={formatVersion:2,runtime:'native-cpp',platform:'win32',arch:'x64',packageVersion:'0.2.0',executable:'jade-cli.exe',executableSha256:hash('native'),runtimeFiles};const file=path.join(source,'distribution.json');fs.writeFileSync(file,JSON.stringify(manifest));const pinFile=path.join(root,'jade-cli-pin.json'),pin={version:'0.2.0',tag:'v0.2.0',sha256:'a'.repeat(64),distributionSha256:hash(fs.readFileSync(file))};const save=()=>fs.writeFileSync(pinFile,JSON.stringify(pin));save();return{source,pinFile,pin,manifest,file,save};}
@@ -36,4 +37,13 @@ test('current MCP requirements reject CLI 0.4.1 and accept the verified package-
   const verify=()=>new NativeDistribution(f.source).verifyPin(f.pinFile,{minimumVersion:requirements.minimumCliVersion,oidFormat:requirements.requiredOidFormat});
   if(accepted)assert.equal(verify().manifest.packageVersion,version);else assert.throws(verify,/version.*0\.4\.2/i);
  }
+});
+
+test('shipped native baseline includes verified shared-session ownership support',()=>{
+ const source=new URL('../../packages/jade-cli-win-x64/',import.meta.url);
+ const pin=new URL('../../packages/jade-cli-pin.json',import.meta.url);
+ const result=new NativeDistribution(fileURLToPath(source)).verifyPin(pin,{minimumVersion:'0.5.0',oidFormat:'jade-native'});
+ assert.equal(result.manifest.runtime,'native-cpp');
+ assert.ok(result.files.has('native/jade-test-helper.exe'));
+ assert.ok(result.files.has('native/jade-inspect-helper.exe'));
 });

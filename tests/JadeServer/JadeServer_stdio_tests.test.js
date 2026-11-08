@@ -21,7 +21,13 @@ for(const mode of ['legacy',{pin:'2026-07-28'}])test('real stdio server discover
   let stderr='';transport.stderr?.on('data',chunk=>stderr+=chunk);
   try{
     await client.connect(transport);
-    assert.ok((await client.listTools()).tools.some(tool=>tool.name==='jade_build'));
+    const tools=(await client.listTools()).tools;
+    assert.ok(tools.some(tool=>tool.name==='jade_build'));
+    for(const tool of tools.filter(tool=>/^jade_(inspect_|release_cursor|close_inspection)/.test(tool.name))){assert.equal(tool.annotations.readOnlyHint,true);assert.equal(tool.annotations.destructiveHint,false);}
+    const doctor=await client.callTool({name:'jade_doctor',arguments:{}});
+    assert.equal(doctor.isError,false,JSON.stringify(doctor));
+    assert.equal(doctor.structuredContent.capabilities.sharedWorkingInspection,true);
+    assert.ok(doctor.structuredContent.sdkVersion.localeCompare('0.5.0','en',{numeric:true})>=0);
     assert.match(client.getInstructions(),/jade_get_guidance/);
     const guidance=await client.readResource({uri:'jade://skills/jade-development'});
     const guidanceTool=await client.callTool({name:'jade_get_guidance',arguments:{}});
