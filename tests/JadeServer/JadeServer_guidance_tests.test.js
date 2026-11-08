@@ -45,3 +45,18 @@ test('guidance refuses unexpected arguments and capability/prompt discovery poin
   const prompt=await client.getPrompt({name:'jade_check_changes',arguments:{}});
   assert.match(prompt.messages[0].content.text,/jade_get_guidance/);
 });
+
+test('MCP guidance delivers native creation and updating rules without opening a database',async t=>{
+ const {client,calls}=await connect(t);
+ const result=await client.callTool({name:'jade_get_guidance',arguments:{}});
+ const resource=await client.readResource({uri:'jade://skills/jade-development'});
+ const skill=result.structuredContent.skill;
+ assert.equal(skill,resource.contents[0].text);
+ assert.match(skill,/create cow transient;/);
+ assert.match(skill,/cow := create NamedCow\("Bessie"\) transient;/);
+ assert.match(skill,/updating[^\n]*does not (?:begin|start) a transaction/i);
+ for(const usage of ['constant','input','io','output'])assert.ok(skill.includes('`'+usage+'`'));
+ assert.match(skill,/create_instruction\.htm/);assert.match(skill,/updating_option\.htm/);
+ assert.match(skill,/Persistent create\/update\/delete/);
+ assert.equal(calls(),0);
+});
