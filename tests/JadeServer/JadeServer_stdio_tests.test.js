@@ -28,6 +28,8 @@ for(const mode of ['legacy',{pin:'2026-07-28'}])test('real stdio server discover
     assert.equal(guidanceTool.isError,false,JSON.stringify(guidanceTool));
     assert.equal(guidanceTool.structuredContent.skill,guidance.contents[0].text);
     assert.match(guidanceTool.structuredContent.skill,/^---\r?\nname: jade-development\r?\n/);
+    assert.match(guidanceTool.structuredContent.skill,/create cow transient;/);
+    assert.match(guidanceTool.structuredContent.skill,/updating[^\n]*does not (?:begin|start) a transaction/i);
     const found=await client.callTool({name:'jade_search_source',arguments:{query:'Fish',limit:10}});
     assert.equal(found.isError,false,JSON.stringify(found));assert.equal(found.structuredContent.rows[0].schema,'Aquarium');
     const workspace=await client.readResource({uri:'jade://workspace'});assert.deepEqual(JSON.parse(workspace.contents[0].text).workspaceRoots,[root]);

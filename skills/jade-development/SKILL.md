@@ -26,6 +26,18 @@ Workspace native files are the application source of truth. System metadata/cach
 
 MCP/CLI read saved files on disk. VS Code build/test commands save their inputs. A scratch command that explicitly accepts a buffer snapshot is different: keep the exact snapshot and selection offsets for diagnostics. Do not silently claim unsaved editor changes were built from disk.
 
+## Object creation, initialisation and updating methods
+
+An object local such as `cow : Cow;` initially holds null. Assign an existing valid reference or use native `create cow transient;` before invoking `cow.moo()`. Never invent `new Cow()`. Resolve whether moo returns a value: `write cow.moo();` consumes a String result. Choose a lifetime permitted by the class, not always transient.
+
+Native `create() updating;` constructors run during creation; ordinary domain initialise/init methods are explicit unless a framework contract says otherwise. Parameterised creation is `cow := create NamedCow("Bessie") transient;`, not `create cow("Bessie") transient`. Parameterless superclass constructors run automatically; parameterised superclass forwarding uses the documented `::super(...)` constructor signature. Application/Global framework lifecycle methods differ from domain constructors.
+
+A method changing self needs `updating`; this does not begin a transaction. Persistent create/update/delete need a persistent transaction. Process-local transient updates do not; sharedTransient has separate transient transaction rules. Default `constant` object parameters cannot call updating methods; `input` may mutate the object but not replace the reference; `io` may replace the caller reference; `output` is not an incoming initial value. A helper updating a different input object does not need updating merely for that reason. Preserve matching CLS method declaration/source signatures and flags.
+
+Use epilog to delete owned transients; deleting null is harmless. Do not delete borrowed references or assume epilog survives fatal process termination. See the project jade-language references/language-reference.md and syntax-reference.md for native-verified examples, official create/updating/constructor documentation and version rules.
+
+[Native create instruction](https://secure.jadeworld.com/developer-centre/Jade2025/OnlineDocumentation/content/resources/devref/ch1languageref/create_instruction.htm) | [Updating option](https://secure.jadeworld.com/developer-centre/Jade2025/OnlineDocumentation/content/resources/devref/ch1languageref/updating_option.htm) | [Constructors and destructors](https://secure.jadeworld.com/developer-centre/Jade2025/OnlineDocumentation/content/resources/userguide/ch4methodfeaturedef/using_constructors_and_destructors.htm)
+
 ## Compile and test
 
 1. Save the intended source changes. Use `jade_build` with specific `files` for a focused build; omit files for the configured incremental project build. CLI equivalents are `jade-cli.exe build path/to/Class.cls` and `jade-cli.exe build` from the project.
