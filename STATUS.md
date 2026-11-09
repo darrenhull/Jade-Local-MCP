@@ -2,6 +2,12 @@
 
 Updated: 9 November 2026.
 
+## ANSI/Unicode package update — 9 November 2026
+
+Issue #25 tracks MCP 0.3.10 bundling the official CLI 0.6.0 release from approved main 4220e8c. Its native launchers select matching ANSI/Unicode helpers from the configured installation; MCP adds no duplicate ABI logic or writable data interface. The checked-in plan is `plans/adopt-official-cli-0.6.0.md`. Official native manifest SHA256 is `77093cc44098c0e94b3da8dae700d83636521aba049c647e5d916971b9007ca9`.
+
+Clean locked dependency installation, every official payload hash and all 97 default protocol/read-only tests passed (two native opt-ins skipped). Source/build validation, portable packaging, all extracted/no-Node tests (97 passed, two native opt-ins skipped) and release artifact checksums passed. The owned external extraction was removed after child exit. Hosted CI/review and owner approval remain delivery gates. Installed MCP/configuration, vendor runtimes and developer databases remain untouched. Native connected ANSI/Unicode proof belongs to reviewed CLI #26; no new connected database run is claimed by this adapter update.
+
 ## Current package update — 9 November 2026
 
 Issue #23 tracks MCP 0.3.9 adopting the verified official native CLI 0.5.2 release from approved main. It includes safe Working backup retries/reuse and native error-message decoding. CLI 0.6 ANSI support remains unreleased and is not included. The checked-in plan is `plans/adopt-official-cli-0.5.2.md`.
