@@ -1,6 +1,13 @@
 # Jade Local MCP status
 
-Updated: 7 November 2026.
+Updated: 9 November 2026.
+
+## Current package update — 9 November 2026
+
+Issue #23 tracks MCP 0.3.9 adopting the verified official native CLI 0.5.2 release from approved main. It includes safe Working backup retries/reuse and native error-message decoding. CLI 0.6 ANSI support remains unreleased and is not included. The checked-in plan is `plans/adopt-official-cli-0.5.2.md`.
+
+Clean locked dependency installation, exact official native pin/hash verification, all 97 default tests (two explicit opt-ins skipped) and source/build identity checks pass. Portable packaging and extracted/no-Node full-suite verification also passed (97 passed, two explicit native opt-ins skipped), as did release checksum validation. The owned extraction was removed after test children exited. Current-head CI, Codex review and owner approval remain delivery gates. No installed MCP, configuration or developer database was modified. Historical checkpoints below describe earlier releases and do not supersede the root task tracker.
+
 
 ## Released and installed
 
