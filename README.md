@@ -28,6 +28,21 @@ A minimal VS Code `.vscode/mcp.json` configuration is:
 
 VS Code and other Copilot clients have different configuration file formats. See the [VS Code MCP configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration) and [GitHub Copilot CLI setup](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers) for the client-specific location. The server itself uses standard local stdio.
 
+## ANSI and Unicode installations
+
+The bundled native CLI detects the character ABI of the configured Jade installation before opening a database and selects the matching helper. Set `installPath` in your project's `jade.json` or connection profile to the installation compatible with that database. `characterSet` defaults to `auto`; optional `ansi` or `unicode` constrains the selected ABI and rejects a mismatch rather than converting a database.
+
+For example, a project configuration may contain:
+
+```json
+{
+  "installPath": "C:/Tools/Jade",
+  "characterSet": "auto"
+}
+```
+
+Use one matching vendor runtime for a project; users do not need both installations. Native build, tests, read-only inspection and text conversion use the matching helper. Regular ANSI text follows the installed Windows code page, while Jade StringUtf8 properties retain their stored UTF-8 text. The CLI release's connected proofs cover ANSI and Unicode runtimes on Windows code page 1252; isolated conversion/log tests additionally cover multibyte CP932. These package/protocol checks do not claim a new connected database run. ANSI debugging and the retired offline compiler/cache are not supported; MCP exposes neither interface.
+
 ## Tools
 
 | Tool | Purpose |
@@ -54,7 +69,7 @@ The data boundary is enforced through strict tool schemas, fixed native inspecti
 
 Native inspection can call the fixed `allowedToInspect` access policy and collection iterator operations. The database's read-only mode protects persistent data; it is not an operating-system sandbox for application callbacks or their external file/network effects. Clients cannot supply arbitrary callback code or method names through data-tool arguments.
 
-Native object identities require an official CLI release advertising `oidFormat: "jade-native"`; this version bundles verified CLI 0.5.2. Working preparation reuses a verified backup after an interrupted restore and uses fresh attempt directories for incomplete backups, avoiding collisions with previous backup files. Native database errors retain their original code and correctly decoded message. Working inspection, builds and tests coordinate one retained native node, with independent read-only inspection consumers. Recoverable inspection errors retain other consumers and rejected target changes do not prepare another database. Valid structural changes use native schema versioning/reorganisation and a healthy reconnect; proven method-body-only changes retain the fast native path. Native CLI 0.4.2 or later is required for the build and package-loading behavior used by this server. Existing `oid`, `classOid` and nested reference/member/key identity fields carry Jade's `Object.getObjectStringForObject` result unchanged for both targets. MCP does not decode, trim, change case or reconstruct those values. Lookup passes a bounded identity string to the fixed native `String.asObject` parser; native syntax and object lookup determine validity. Input is limited to 512 UTF-8 bytes without ASCII control characters. Legacy 44-hex serialized identities remain input-only compatibility, not native display IDs. Cursor/session/job tokens are separate opaque values and are not converted into Jade identities.
+Native object identities require an official CLI release advertising `oidFormat: "jade-native"`; this version bundles verified CLI 0.6.0. Working preparation reuses a verified backup after an interrupted restore and uses fresh attempt directories for incomplete backups, avoiding collisions with previous backup files. Native database errors retain their original code and correctly decoded message. Working inspection, builds and tests coordinate one retained native node, with independent read-only inspection consumers. Recoverable inspection errors retain other consumers and rejected target changes do not prepare another database. Valid structural changes use native schema versioning/reorganisation and a healthy reconnect; proven method-body-only changes retain the fast native path. Native CLI 0.4.2 or later is required for the build and package-loading behavior used by this server. Existing `oid`, `classOid` and nested reference/member/key identity fields carry Jade's `Object.getObjectStringForObject` result unchanged for both targets. MCP does not decode, trim, change case or reconstruct those values. Lookup passes a bounded identity string to the fixed native `String.asObject` parser; native syntax and object lookup determine validity. Input is limited to 512 UTF-8 bytes without ASCII control characters. Legacy 44-hex serialized identities remain input-only compatibility, not native display IDs. Cursor/session/job tokens are separate opaque values and are not converted into Jade identities.
 
 Successful inspection responses must advertise the native identity format; an older backend is rejected before its raw identities can be presented as canonical data. Packaging also requires the capability in the verified official native manifest. Accepting an input string in a protocol test does not establish that it is a valid Jade object identity; the connected native integration proof exercises real lookups separately.
 
