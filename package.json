@@ -40,7 +40,7 @@
   "engines": {
     "node": ">=24.22.1"
   },
-  "version": "0.3.11",
+  "version": "0.3.12",
   "jadeMcp": {
     "serverImplemented": true,
     "requiredOidFormat": "jade-native",
