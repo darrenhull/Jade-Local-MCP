@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import {fileURLToPath} from 'node:url';
-import {execFileSync} from 'node:child_process';
+import {execFileSync,spawnSync} from 'node:child_process';
 import {Client} from '@modelcontextprotocol/client';
 import {StdioClientTransport} from '@modelcontextprotocol/client/stdio';
 import {TemporaryWorkspace} from '../../scripts/TemporaryWorkspace.js';
@@ -14,7 +14,15 @@ for(const mode of ['legacy',{pin:'2026-07-28'}])test('real stdio server queries 
   const executable=process.env.JADE_MCP_STANDALONE_EXE;
   const entry=fileURLToPath(new URL('../../bin/jade-mcp.js',import.meta.url));
   const env={...process.env,JADE_TOOLS_STATE_DIRECTORY:path.join(root,'broker'),JADE_TOOLS_CONNECTIONS_FILE:path.join(root,'no-connections.json')};
-  if(executable)env.PATH=path.join(process.env.SystemRoot||'C:/Windows','System32');
+  if(executable){
+    const system=path.join(process.env.SystemRoot||'C:/Windows','System32');
+    const where=path.join(system,'where.exe');
+    const git=execFileSync(where,['git.exe'],{encoding:'utf8',windowsHide:true}).trim().split(/\r?\n/)[0];
+    assert.ok(path.isAbsolute(git),'The portable source fixture requires an absolute Git installation');
+    env.PATH=[path.dirname(git),system].join(path.delimiter);
+    assert.equal(spawnSync(where,['git.exe'],{env,windowsHide:true}).status,0,'Git must remain available for native saved-source preparation');
+    assert.equal(spawnSync(where,['node.exe'],{env,windowsHide:true}).status,1,'The portable MCP proof must not find Node on PATH');
+  }
   fs.writeFileSync(path.join(root,'jade.json'),JSON.stringify({sourceFormat:'jox',workingMode:'source-backed',characterSet:'ansi',workspaceRoots:['.']}));
   fs.mkdirSync(path.join(root,'schemas/Aquarium/types'),{recursive:true});
   fs.writeFileSync(path.join(root,'schemas/Aquarium.jox'),'<Schema name="Aquarium" id="a11eb215-db38-40cc-b02c-fc7f9fbf5014"><superschema name="RootSchema"/></Schema>');
