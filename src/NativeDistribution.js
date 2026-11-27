@@ -2,6 +2,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
+function requiredRuntimeFiles(manifest){
+ if(!Object.hasOwn(manifest,'joxRuntime'))return ['jade-test-helper.exe','jade-native-helper.exe','jade-debug-helper.exe','jade-inspect-helper.exe','debugger-abi.json'].map(name=>'native/'+name);
+ const runtime=manifest.joxRuntime;
+ if(!runtime||runtime.format!==1||runtime.characterSet!=='unicode'||!manifest.sourceFormats?.includes('jox'))throw Error('Invalid JOX runtime declaration.');
+ const required=['native/jade-inspect-helper.exe','native/jade-inspect-helper-ansi.exe','native/jade-inspect-helper-unicode.exe'];
+ const cohort=(mode,prefix)=>{for(const name of ['jade-jox-test-helper-'+mode+'.exe','jadegitscm.dll','jadegitdev.dll','runtime-provenance.json'])required.push(prefix+name);};
+ cohort('unicode','native/jox/');
+ for(const [mode,variant]of Object.entries({unicode:runtime,...(runtime.variants||{})})){
+  if(!['ansi','unicode'].includes(mode)||variant?.characterSet!==mode||variant.format!==1||variant.nativeDebug!==undefined&&typeof variant.nativeDebug!=='boolean')throw Error('Invalid JOX character/runtime capability.');
+  if(mode==='ansi')cohort(mode,'native/jox/ansi/');
+  if(variant.nativeDebug===true)required.push('native/jade-debug-helper.exe','native/jade-debug-helper-'+mode+'.exe','native/debugger-abi-'+mode+'.json');
+ }
+ return required;
+}
+
 /** Build-time validation of the pinned native CLI; never executes its contents. */
 export class NativeDistribution {
   constructor(source){this.source=path.resolve(source);}
@@ -14,7 +29,7 @@ export class NativeDistribution {
     if(result.manifest.packageVersion!==pin.version)throw Error('Native CLI release version differs from its pin.');
     if(minimumVersion&&(!/^\d+\.\d+\.\d+$/.test(minimumVersion)||pin.version.localeCompare(minimumVersion,'en',{numeric:true})<0))throw Error('Native CLI version '+minimumVersion+' or newer is required.');
     if(oidFormat&&result.manifest.oidFormat!==oidFormat)throw Error('Required native object identity capability oidFormat '+oidFormat+' is missing. Use an official compatible Jade CLI release.');
-    for(const name of ['jade-test-helper.exe','jade-native-helper.exe','jade-debug-helper.exe','jade-inspect-helper.exe','debugger-abi.json'])if(!result.files.has('native/'+name))throw Error('Mandatory native CLI helper is missing: '+name);
+    for(const name of requiredRuntimeFiles(result.manifest))if(!result.files.has(name))throw Error('Mandatory native CLI helper is missing: '+name);
     return result;
   }
   verify(){

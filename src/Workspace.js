@@ -5,6 +5,13 @@ export class Workspace {
   constructor({cwd=process.cwd(),configFile}={}) {this.cwd=path.resolve(cwd);this.configFile=configFile;}
   prepare(command,input={}) {
     if(['status','disconnect','shutdown'].includes(command))return {command};
+    if(command.startsWith('source.semantic.')){
+      const fields={prepare:[],query:['provider','projectId','generation','kind','parentId','search','qualifiedName','memberKind','includeInherited','offset','limit'],read:['provider','projectId','generation','entityId','originUri','originText','position','originByteHash'],closeProject:['provider','projectId']};
+      const selected=fields[command.slice('source.semantic.'.length)];
+      if(!selected)throw Error('Unsupported semantic source operation; MCP source access is read-only.');
+      return{command,cwd:this.cwd,restrictToWorkspace:true,...Object.fromEntries(selected.filter(key=>input[key]!==undefined).map(key=>[key,input[key]])),
+        ...(command==='source.semantic.prepare'?{config:{sourceFormat:'jox'},...(this.configFile?{configFile:path.resolve(this.cwd,this.configFile)}:{})}:{})};
+    }
     const argv=[];
     if(this.configFile)argv.push('--config',path.resolve(this.cwd,this.configFile));
     for(const key of ['query','limit','offset','target'])if(input[key]!==undefined)argv.push('--'+key,String(input[key]));
@@ -29,6 +36,6 @@ export class Workspace {
     const result=await execute({...this.prepare('doctor'),command:'prepare'});
     if(!result.passed)throw Error(result.report?.error||'Native workspace preparation failed.');
     const {config={},configFile}=result.prepared;
-    return {configFile:configFile||null,workspaceRoots:config.workspaceRoots,installPath:config.installPath||null,databasePath:config.databasePath||null,server:config.server||'singleUser',schema:config.schema||null,source:'saved files on disk'};
+    return {configFile:configFile||null,workspaceRoots:config.workspaceRoots,installPath:config.installPath||null,databasePath:config.databasePath||null,server:config.server||'singleUser',schema:config.schema||null,sourceFormat:config.sourceFormat||null,workingMode:config.workingMode||null,schemaPath:config.schemaPath||null,characterSet:config.characterSet||'auto',source:'saved files on disk'};
   }
 }

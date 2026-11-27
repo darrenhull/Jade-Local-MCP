@@ -1,0 +1,52 @@
+{
+  "format": 1,
+  "engineCommit": "f61e1802d430bdea41bada9b10d333e69f85eb9e",
+  "characterSet": "unicode",
+  "characterBytes": 2,
+  "componentCharacterBytes": {
+    "jadegitscm.dll": 2,
+    "jadegitdev.dll": 2
+  },
+  "loaderDiagnostics": false,
+  "observedProvider": false,
+  "files": {
+    "jade-jox-test-helper-unicode.exe": "94136237065f465d44809e6adf254ff5606c53ceac4a4c637c6b78b6bd05922d",
+    "jadegitscm.dll": "d4e497c60017b6e95b3b158908693042d7eda6c9dc1f5984017adb2776639d7c",
+    "jadegitdev.dll": "808334b89a68ca12fb3ba7c6aeff8dc2674fb2334f91065ae09dfefa57e1677c"
+  },
+  "qualification": {
+    "managedUpload": true,
+    "nativeTests": true,
+    "initialization": true,
+    "nativeScratch": false
+  },
+  "source": {
+    "release": "v0.18.1",
+    "archiveSha256": "58ff20e95b0bc660329f6efc40c0add95d0d718b8cdf178d5c52cfece4743f98"
+  },
+  "build": {
+    "crt": "MT",
+    "arch": "x64",
+    "cliVersion": "0.11.2"
+  },
+  "qualificationBasis": {
+    "candidateManifestSha256": "991437d89c283bb4cecbeb4c428a88e763e744e25ec880e56d2be491f65be11b",
+    "candidateExecutableSha256": "36806b66741520a525539f3a8c4a0ce7d6cd16f17aa86311d8cac41adcc07b3f",
+    "reviewedPacketSha256": "f42f977addff405786f789504fc7a9e2ed6e424407149d28244cba7657afbe8f",
+    "connectedReceiptSha256": "b58df3704861b475bab0918453f3c5d3806c8acb245c26566c6bdf38c6d0100a",
+    "ownedSupervisorNaturalExit": true,
+    "nativeHelperCloseConfirmed": true,
+    "nativePlatformVersion": "25.0.2",
+    "extractedFiles": 8,
+    "savedSourceBaselineEstablished": true,
+    "unchangedNoUploadCode": 0,
+    "changedSingleOriginExpectedFailureCode": 1,
+    "correctedSingleOriginPassCode": 0,
+    "warmNoUploadCode": 0,
+    "historicalWorkingByteSnapshotUnchanged": true,
+    "disposableSeedIniUnchanged": true,
+    "disposableSeedChangedFiles": [
+      "system\\_control.dat"
+    ]
+  }
+}

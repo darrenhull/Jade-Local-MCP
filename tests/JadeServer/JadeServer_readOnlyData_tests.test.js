@@ -14,7 +14,12 @@ const inspections = [
   ['jade_release_cursor', 'inspect.release', {cursor: 'owned-cursor'}],
   ['jade_close_inspection', 'inspect.close', {}],
 ];
-const reads = [...inspections, ['jade_doctor', 'doctor', {}], ['jade_list_tests', 'tests.list', {}], ['jade_search_source', 'source.search', {}], ['jade_status', 'status', {}], ['jade_list_jobs', 'jobs', {}]];
+const reads = [
+ ['jade_prepare_sources','source.semantic.prepare',{}],
+ ['jade_query_source','source.semantic.query',{projectId:'owned-project',generation:'generation',kind:'type'}],
+ ['jade_read_source','source.semantic.read',{projectId:'owned-project',generation:'generation',entityId:'owned-method'}],
+ ['jade_close_sources','source.semantic.closeProject',{projectId:'owned-project'}],
+ ...inspections, ['jade_doctor', 'doctor', {}], ['jade_list_tests', 'tests.list', {}], ['jade_search_source', 'source.search', {}], ['jade_status', 'status', {}], ['jade_list_jobs', 'jobs', {}]];
 
 async function connect(t) {
   const requests = [];
