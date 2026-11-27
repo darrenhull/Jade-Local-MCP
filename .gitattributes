@@ -1,0 +1,2 @@
+# Preserve verified vendor distribution hashes on every platform.
+/packages/jade-cli-win-x64/** -text

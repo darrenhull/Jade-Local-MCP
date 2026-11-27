@@ -9,7 +9,7 @@ import {Client} from '@modelcontextprotocol/client';
 import {StdioClientTransport} from '@modelcontextprotocol/client/stdio';
 import {TemporaryWorkspace} from '../../scripts/TemporaryWorkspace.js';
 
-for(const mode of ['legacy',{pin:'2026-07-28'}])test('real stdio server discovers config and queries schema-qualified files: '+JSON.stringify(mode),async()=>{
+for(const mode of ['legacy',{pin:'2026-07-28'}])test('real stdio server queries initialized CLS and prepares cold JOX sources: '+JSON.stringify(mode),async()=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'jade-mcp-stdio-'));
   const executable=process.env.JADE_MCP_STANDALONE_EXE;
   const entry=fileURLToPath(new URL('../../bin/jade-mcp.js',import.meta.url));
@@ -22,6 +22,7 @@ for(const mode of ['legacy',{pin:'2026-07-28'}])test('real stdio server discover
   fs.writeFileSync(path.join(root,'Fish.cls'),'jadeVersionNumber \"25.0.02\";\nschemaDefinition\nAquarium subschemaOf RootSchema partialDefinition;\ntypeHeaders\nFish subclassOf Object transient;\ntypeDefinitions\nFish completeDefinition\n(\n)\ntypeSources\n');
   fs.writeFileSync(path.join(root,'.gitignore'),'/.jade/\n');
   for(const args of [['init','--quiet','--initial-branch=main'],['config','user.name','MCP protocol fixture'],['config','user.email','protocol@example.invalid'],['config','commit.gpgsign','false'],['add','--all'],['commit','--quiet','-m','Owned JOX source fixture']])execFileSync('git.exe',['-C',root,...args],{timeout:15000,windowsHide:true,stdio:'pipe'});
+  // Legacy CLS queries require a separately initialized cache; the JOX path below starts cold.
   const nativeEntry=fileURLToPath(new URL('../../native/jade-cli.exe',import.meta.url));
   const refresh=JSON.parse(execFileSync(nativeEntry,['source','refresh','--json'],{cwd:root,env,timeout:30000,windowsHide:true,encoding:'utf8',stdio:['ignore','pipe','pipe']}));
   assert.equal(refresh.passed,true,'Native fixture source cache was not initialized');
