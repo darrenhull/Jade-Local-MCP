@@ -5,6 +5,7 @@ build/
 *.exe
 !packages/jade-cli-win-x64/*.exe
 !packages/jade-cli-win-x64/native/*.exe
+!packages/jade-cli-win-x64/native/**/*.exe
 coverage/
 *.log
 *.tgz

@@ -1,0 +1,76 @@
+{
+  "format": 1,
+  "engineCommit": "f61e1802d430bdea41bada9b10d333e69f85eb9e",
+  "characterSet": "ansi",
+  "characterBytes": 1,
+  "componentCharacterBytes": {
+    "jadegitscm.dll": 1,
+    "jadegitdev.dll": 1
+  },
+  "loaderDiagnostics": false,
+  "observedProvider": false,
+  "files": {
+    "jade-jox-test-helper-ansi.exe": "9ec192f2906cf3d4fc45cc1034e60e359a99c4d0099ead265234ca048c046d85",
+    "jadegitscm.dll": "2745b8994a1e59e5c34790db29b28aed459e74c2b846a3be685c74e458069c7d",
+    "jadegitdev.dll": "ccc5db0103dcdf792b6768abc7c8e64d5894d506ec95c7115cf74eeed030e990"
+  },
+  "qualification": {
+    "managedUpload": true,
+    "nativeTests": true,
+    "initialization": true,
+    "nativeScratch": true,
+    "nativeDebug": true,
+    "sync": true,
+    "checkoutInitialization": false
+  },
+  "source": {
+    "release": "v0.18.1",
+    "archiveSha256": "58ff20e95b0bc660329f6efc40c0add95d0d718b8cdf178d5c52cfece4743f98"
+  },
+  "build": {
+    "crt": "MT",
+    "arch": "x64",
+    "cliVersion": "0.11.8"
+  },
+  "qualificationBasis": {
+    "model": "sdk-build-controls",
+    "connectedTested": false,
+    "sdkCharacterSet": "ansi",
+    "controls": [
+      "JoxManagedActivation_tests",
+      "JoxManagedValidity_tests"
+    ],
+    "sourceRuntime": {
+      "connectedTested": false,
+      "packagedCliSha256": "3c166f7fdb1f43355009f0ecf2f2ee35768fa96da28d4f720184fa49554a9400",
+      "controls": [
+        "JoxManagedActivation_tests",
+        "JoxManagedValidity_tests"
+      ],
+      "model": "sdk-build-controls",
+      "policySha256": "a8692ef7d3eb6b8cec6cb422f49153bc206a287618fdf87aa21a67a24bd8f111"
+    }
+  },
+  "debuggerProof": {
+    "checks": {
+      "step": true,
+      "cancel": true,
+      "sourceMap": true,
+      "shutdown": true,
+      "launch": true,
+      "breakpoint": true
+    },
+    "characterSet": "ansi",
+    "runtimeLibraries": {
+      "jlnintp.dll": "7029153062b52dcbb0b6d571cfbb47704ee83d6f71f90767dfdf6ff9dd1ee9be",
+      "jom.dll": "d7d235da0f027814df47de740855509a7c222c83dd2c4289ce4853241bcea9e0",
+      "jomos.dll": "349786ebe04b4bdb5479174842ffc5c05a5aefffdfc817d80891c5c49b23838f",
+      "jomsupp.dll": "f769b339ca235ae859162cdf41f7ef2c09b271ef462dd5496b429f1df264f329"
+    },
+    "profileSha256": "30bd125063a66a22c4791158862c1cffcb2e640f4d8f0069e8087398b928a989",
+    "cliSha256": "7a63aa278631f8256f9faab0fb74bf3a929bc4c8cad2010ca144cb037cf97e42",
+    "helperSha256": "4f39f9fb6c73943e2d81acdc8eecfe6fa12ed616759f84fddb2e9a6f47112d7a",
+    "format": 1,
+    "receiptSha256": "acd1e21742676118a2223cef5226008e7f720b34ce8e0da65c469e11d1210031"
+  }
+}

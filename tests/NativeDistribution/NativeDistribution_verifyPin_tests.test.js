@@ -29,13 +29,13 @@ test('canonical identity requirements accept newer native versions and reject an
 });
 
 
-test('current MCP requirements reject CLI 0.4.1 and accept the verified package-capable 0.4.2 backend',t=>{
+test('current MCP requirements reject older CLI and require the JOX source-mapping 0.11.10 backend',t=>{
  const requirements=JSON.parse(fs.readFileSync(new URL('../../package.json',import.meta.url),'utf8')).jadeMcp;
- for(const [version,accepted] of [['0.4.1',false],['0.4.2',true]]){
+ for(const [version,accepted] of [['0.11.9',false],['0.11.10',true]]){
   const f=fixture(t);f.manifest.packageVersion=version;f.manifest.oidFormat='jade-native';fs.writeFileSync(f.file,JSON.stringify(f.manifest));
   f.pin.version=version;f.pin.tag='v'+version;f.pin.distributionSha256=hash(fs.readFileSync(f.file));f.save();
   const verify=()=>new NativeDistribution(f.source).verifyPin(f.pinFile,{minimumVersion:requirements.minimumCliVersion,oidFormat:requirements.requiredOidFormat});
-  if(accepted)assert.equal(verify().manifest.packageVersion,version);else assert.throws(verify,/version.*0\.4\.2/i);
+  if(accepted)assert.equal(verify().manifest.packageVersion,version);else assert.throws(verify,/version.*0\.11\.10/i);
  }
 });
 
@@ -44,6 +44,6 @@ test('shipped native baseline includes verified shared-session ownership support
  const pin=new URL('../../packages/jade-cli-pin.json',import.meta.url);
  const result=new NativeDistribution(fileURLToPath(source)).verifyPin(pin,{minimumVersion:'0.5.0',oidFormat:'jade-native'});
  assert.equal(result.manifest.runtime,'native-cpp');
- assert.ok(result.files.has('native/jade-test-helper.exe'));
+ assert.ok(result.files.has(result.manifest.joxRuntime?'native/jox/ansi/jade-jox-test-helper-ansi.exe':'native/jade-test-helper.exe'));
  assert.ok(result.files.has('native/jade-inspect-helper.exe'));
 });

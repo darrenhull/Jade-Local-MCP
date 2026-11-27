@@ -69,7 +69,21 @@ function Test-NativeDistribution([string]$Directory){
  Assert-NativeContained $Directory $manifestFile
  $manifest=Get-Content -LiteralPath $manifestFile -Raw|ConvertFrom-Json -AsHashtable
  if($manifest.formatVersion -ne 2 -or $manifest.runtime -ne 'native-cpp' -or $manifest.platform -ne 'win32' -or $manifest.arch -ne 'x64' -or $manifest.executable -ne 'jade-cli.exe' -or $manifest.packageVersion -isnot [string] -or $manifest.packageVersion -notmatch '^\d+\.\d+\.\d+$' -or $manifest.runtimeFiles -isnot [Collections.IDictionary]){throw 'Invalid native C++ CLI distribution identity.'}
- foreach($required in @('jade-test-helper.exe','jade-debug-helper.exe','jade-inspect-helper.exe','jade-native-helper.exe','debugger-abi.json')){if(!$manifest.runtimeFiles.Contains('native/'+$required)){throw ('Required native runtime asset is missing: '+$required)}}
+ $required=@('native/jade-test-helper.exe','native/jade-debug-helper.exe','native/jade-inspect-helper.exe','native/jade-native-helper.exe','native/debugger-abi.json')
+ if($manifest.Contains('joxRuntime')){
+  $runtime=$manifest.joxRuntime
+  if($runtime -isnot [Collections.IDictionary] -or $runtime.format -ne 1 -or $runtime.characterSet -cne 'unicode' -or 'jox' -notin $manifest.sourceFormats){throw 'Invalid JOX runtime declaration.'}
+  $required=@('native/jade-inspect-helper.exe','native/jade-inspect-helper-ansi.exe','native/jade-inspect-helper-unicode.exe')
+  foreach($name in @('jade-jox-test-helper-unicode.exe','jadegitscm.dll','jadegitdev.dll','runtime-provenance.json')){$required+='native/jox/'+$name}
+  $variants=@{unicode=$runtime};if($runtime.Contains('variants')){foreach($entry in $runtime.variants.GetEnumerator()){$variants[$entry.Key]=$entry.Value}}
+  foreach($entry in $variants.GetEnumerator()){
+   $mode=$entry.Key;$variant=$entry.Value
+   if($mode -cnotin @('ansi','unicode') -or $variant -isnot [Collections.IDictionary] -or $variant.format -ne 1 -or $variant.characterSet -cne $mode -or ($variant.Contains('nativeDebug') -and $variant.nativeDebug -isnot [bool])){throw 'Invalid JOX character/runtime capability.'}
+   if($mode -ceq 'ansi'){foreach($name in @('jade-jox-test-helper-ansi.exe','jadegitscm.dll','jadegitdev.dll','runtime-provenance.json')){$required+='native/jox/ansi/'+$name}}
+   if($variant.nativeDebug -eq $true){$required+=@('native/jade-debug-helper.exe',('native/jade-debug-helper-'+$mode+'.exe'),('native/debugger-abi-'+$mode+'.json'))}
+  }
+ }
+ foreach($name in $required){if(!$manifest.runtimeFiles.Contains($name)){throw ('Required native runtime asset is missing: '+$name)}}
  $expected=@{};foreach($entry in $manifest.runtimeFiles.GetEnumerator()){$expected[$entry.Key]=$entry.Value};$expected['jade-cli.exe']=$manifest.executableSha256
  foreach($relative in $expected.Keys){
   Assert-NativePath $relative;$file=Join-Path $Directory $relative;Assert-NativeContained $Directory $file
